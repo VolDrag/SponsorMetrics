@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
-    password: {
+    passwordHash: {
       type: String,
       required: true,
       minlength: 8,
@@ -40,6 +40,20 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    industry: {
+      type: String,
+      trim: true,
+    },
+    budgetTier: {
+      type: String,
+      enum: ['starter', 'growth', 'pro'],
+    },
+    credibilityScore: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5,
+    },
   },
   {
     timestamps: true,
@@ -48,16 +62,16 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.pre('save', async function preSave(next) {
-  if (!this.isModified('password')) {
+  if (!this.isModified('passwordHash')) {
     return next();
   }
 
-  this.password = await bcrypt.hash(this.password, 12);
+  this.passwordHash = await bcrypt.hash(this.passwordHash, 12);
   return next();
 });
 
 userSchema.methods.comparePassword = function comparePassword(candidate) {
-  return bcrypt.compare(candidate, this.password);
+  return bcrypt.compare(candidate, this.passwordHash);
 };
 
 const User = mongoose.model('User', userSchema);

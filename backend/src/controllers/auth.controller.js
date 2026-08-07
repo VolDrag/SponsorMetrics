@@ -48,7 +48,7 @@ const register = async (req, res) => {
     const user = await User.create({
       name: name.trim(),
       email: normalizedEmail,
-      password,
+      passwordHash: password,
       role,
       isVerified: false,
       otp,
@@ -90,7 +90,7 @@ const verifyOTP = async (req, res) => {
     const token = signToken(user);
     setAuthCookie(res, token);
 
-    const safeUser = await User.findById(user._id).select('-password');
+    const safeUser = await User.findById(user._id).select('-passwordHash');
 
     return res.status(200).json({
       message: 'OTP verified successfully.',
@@ -107,7 +107,7 @@ const login = async (req, res) => {
     const { email, password } = req.body;
     const normalizedEmail = String(email).toLowerCase();
 
-    const user = await User.findOne({ email: normalizedEmail }).select('+password');
+    const user = await User.findOne({ email: normalizedEmail }).select('+passwordHash');
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
@@ -124,7 +124,7 @@ const login = async (req, res) => {
     const token = signToken(user);
     setAuthCookie(res, token);
 
-    const safeUser = await User.findById(user._id).select('-password');
+    const safeUser = await User.findById(user._id).select('-passwordHash');
 
     return res.status(200).json({
       message: 'Login successful.',

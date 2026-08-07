@@ -4,6 +4,9 @@ import ProtectedRoute from '../components/common/ProtectedRoute';
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
 import VerifyOTP from '../pages/auth/VerifyOTP';
+// ifty
+import TierPackageCreator from '../pages/organizer/TierPackageCreator';
+// ifty end
 
 const AuthenticatedLanding = () => (
   <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
@@ -14,6 +17,14 @@ const AuthenticatedLanding = () => (
   </div>
 );
 
+// ifty
+const organizerTierRoute = (
+  <Route element={<ProtectedRoute allowedRoles={['organizer']} />}>
+    <Route path="/organizer/tier-packages" element={<TierPackageCreator />} />
+  </Route>
+);
+// ifty end
+
 const AppRoutes = () => (
   <Routes>
     <Route path="/register" element={<Register />} />
@@ -23,6 +34,7 @@ const AppRoutes = () => (
     <Route element={<ProtectedRoute />}>
       <Route path="/" element={<AuthenticatedLanding />} />
     </Route>
+    {organizerTierRoute}
 
     <Route path="*" element={<Navigate to="/login" replace />} />
   </Routes>
