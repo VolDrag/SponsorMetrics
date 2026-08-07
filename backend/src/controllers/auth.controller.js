@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
-const { sendOTP, sendWelcomeEmail } = require('../services/email.service');
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -9,11 +8,7 @@ const generateToken = (id) => {
   });
 };
 
-const generateOTP = () => {
-  return crypto.randomInt(100000, 999999).toString();
-};
-
-// @desc    Register new user
+// @desc    Register new user (NO EMAIL VERIFICATION)
 // @route   POST /api/auth/register
 // @access  Public
 exports.register = async (req, res) => {
@@ -39,11 +34,7 @@ exports.register = async (req, res) => {
       });
     }
 
-    // Generate OTP
-    const otp = generateOTP();
-    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-    // Create user
+    // Create user with isVerified = true (skip verification)
     const user = await User.create({
       name,
       email: email.toLowerCase(),
@@ -54,76 +45,15 @@ exports.register = async (req, res) => {
       industry,
       budgetTier,
       phone,
-      verificationOTP: {
-        code: otp,
-        expiresAt: otpExpires,
-      },
+      isVerified: true,
     });
 
-    // Send OTP email
-    try {
-      await sendOTP(email, otp, name);
-    } catch (emailError) {
-      // If email fails, still create user but inform them
-      console.error('Email sending failed:', emailError);
-    }
+    // Generate token immediately
+    const token = generateToken(user._id);
 
     res.status(201).json({
       success: true,
-      message: 'Registration successful! Please verify your email with the OTP sent.',
-      data: {
-        userId: user._id,
-        email: user.email,
-        requiresVerification: true,
-      },
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Registration failed',
-      error: error.message,
-    });
-  }
-};
-
-// @desc    Verify OTP
-// @route   POST /api/auth/verify-otp
-// @access  Public
-exports.verifyOTP = async (req, res) => {
-  try {
-    const { email, otp } = req.body;
-
-    const user = await User.findOne({
-      email: email.toLowerCase(),
-      'verificationOTP.code': otp,
-      'verificationOTP.expiresAt': { $gt: new Date() },
-    });
-
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid or expired OTP',
-      });
-    }
-
-    // Mark as verified
-    user.isVerified = true;
-    user.verificationOTP = undefined;
-    await user.save();
-
-    // Send welcome email
-    try {
-      await sendWelcomeEmail(email, user.name);
-    } catch (err) {
-      console.error('Welcome email failed:', err);
-    }
-
-    // Generate token
-    const token = generateToken(user._id);
-
-    res.status(200).json({
-      success: true,
-      message: 'Email verified successfully!',
+      message: 'Registration successful!',
       data: {
         token,
         user: {
@@ -138,50 +68,7 @@ exports.verifyOTP = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'OTP verification failed',
-      error: error.message,
-    });
-  }
-};
-
-// @desc    Resend OTP
-// @route   POST /api/auth/resend-otp
-// @access  Public
-exports.resendOTP = async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    const user = await User.findOne({
-      email: email.toLowerCase(),
-      isVerified: false,
-    });
-
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: 'User not found or already verified',
-      });
-    }
-
-    // Generate new OTP
-    const otp = generateOTP();
-    user.verificationOTP = {
-      code: otp,
-      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
-    };
-    await user.save();
-
-    // Send email
-    await sendOTP(email, otp, user.name);
-
-    res.status(200).json({
-      success: true,
-      message: 'New OTP sent successfully',
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Failed to resend OTP',
+      message: 'Registration failed',
       error: error.message,
     });
   }
@@ -194,7 +81,6 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Check if user exists (include password for comparison)
     const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
 
     if (!user) {
@@ -204,7 +90,6 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Check password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({
@@ -213,16 +98,6 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Check if verified
-    if (!user.isVerified) {
-      return res.status(403).json({
-        success: false,
-        message: 'Please verify your email first',
-        data: { requiresVerification: true, email: user.email },
-      });
-    }
-
-    // Check if active
     if (!user.isActive) {
       return res.status(403).json({
         success: false,
@@ -230,7 +105,6 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Generate token
     const token = generateToken(user._id);
 
     res.status(200).json({
