@@ -1,125 +1,123 @@
-import { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-
+import React from 'react'
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import api from '../../services/api';
-
-const RESEND_COOLDOWN_SECONDS = 60;
+import authApi from '../../services/authApi';
 
 const VerifyOTP = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { otpEmail, verifyOTP } = useAuth();
+  const { login } = useAuth();
   const [otp, setOtp] = useState('');
-  const [cooldown, setCooldown] = useState(RESEND_COOLDOWN_SECONDS);
-  const [submitting, setSubmitting] = useState(false);
-  const [resending, setResending] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
+  const [resendTimer, setResendTimer] = useState(60);
 
-  const email = location.state?.email || otpEmail;
+  const email = localStorage.getItem('pendingEmail');
 
   useEffect(() => {
     if (!email) {
       navigate('/register');
-    }
-  }, [email, navigate]);
-
-  useEffect(() => {
-    if (cooldown <= 0) {
-      return undefined;
+      return;
     }
 
-    const intervalId = setInterval(() => {
-      setCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    const timer = setInterval(() => {
+      setResendTimer((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
 
-    return () => clearInterval(intervalId);
-  }, [cooldown]);
+    return () => clearInterval(timer);
+  }, [email, navigate]);
 
-  const handleVerify = async (event) => {
-    event.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
     setError('');
-    setMessage('');
-    setSubmitting(true);
 
     try {
-      await verifyOTP({ email, otp });
-      navigate('/');
-    } catch (apiError) {
-      setError(apiError.response?.data?.message || 'OTP verification failed.');
+      const res = await authApi.verifyOTP({ email, otp });
+      const { token, user } = res.data.data;
+
+      login(token, user);
+      localStorage.removeItem('pendingEmail');
+
+      // Redirect based on role
+      if (user.role === 'organizer') {
+        navigate('/organizer/events');
+      } else {
+        navigate('/sponsor/discover');
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Invalid OTP');
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
 
-  const handleResend = async () => {
-    setError('');
-    setMessage('');
-    setResending(true);
-
+  const handleResend = async () => { 
     try {
-      await api.post('/api/auth/resend-otp', { email });
-      setMessage('A new OTP has been sent to your email.');
-      setCooldown(RESEND_COOLDOWN_SECONDS);
-    } catch (apiError) {
-      setError(apiError.response?.data?.message || 'Could not resend OTP.');
-    } finally {
-      setResending(false);
+      await authApi.resendOTP(email);
+      setResendTimer(60);
+      setError('');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to resend OTP');
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-8">
-      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg">
-        <h1 className="text-2xl font-bold text-slate-900">Verify OTP</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Enter the 6-digit code sent to <span className="font-medium text-slate-800">{email}</span>.
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
+      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
+        <h2 className="text-2xl font-bold text-center text-gray-900 mb-2">
+          Verify Your Email
+        </h2>
+        <p className="text-center text-gray-500 mb-6">
+          Enter the 6-digit code sent to <strong>{email}</strong>
         </p>
 
-        <form className="mt-6 space-y-4" onSubmit={handleVerify}>
-          <input
-            type="text"
-            inputMode="numeric"
-            pattern="\d{6}"
-            maxLength={6}
-            placeholder="6-digit OTP"
-            value={otp}
-            onChange={(event) => setOtp(event.target.value.replace(/\D/g, ''))}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-center text-lg tracking-[0.3em] outline-none focus:border-indigo-500"
-            required
-          />
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
+            {error}
+          </div>
+        )}
 
-          {error ? <p className="text-sm text-red-600">{error}</p> : null}
-          {message ? <p className="text-sm text-emerald-600">{message}</p> : null}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <input
+              type="text"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              maxLength={6}
+              required
+              className="w-full px-4 py-3 text-center text-2xl tracking-[1em] border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="______"
+            />
+          </div>
 
           <button
             type="submit"
-            disabled={submitting || otp.length !== 6}
-            className="w-full rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
+            disabled={loading || otp.length !== 6}
+            className="w-full py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50"
           >
-            {submitting ? 'Verifying...' : 'Verify OTP'}
+            {loading ? 'Verifying...' : 'Verify Email'}
           </button>
+
+          <div className="text-center">
+            {resendTimer > 0 ? (
+              <p className="text-sm text-gray-500">
+                Resend code in {resendTimer}s
+              </p>
+            ) : (
+              <button
+                type="button"
+                onClick={handleResend}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                Resend OTP
+              </button>
+            )}
+          </div>
         </form>
-
-        <button
-          type="button"
-          onClick={handleResend}
-          disabled={resending || cooldown > 0}
-          className="mt-4 w-full rounded-lg border border-slate-300 px-4 py-2 font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {cooldown > 0 ? `Resend OTP in ${cooldown}s` : resending ? 'Resending...' : 'Resend OTP'}
-        </button>
-
-        <p className="mt-4 text-sm text-slate-600">
-          Back to{' '}
-          <Link className="font-semibold text-indigo-600 hover:text-indigo-700" to="/login">
-            login
-          </Link>
-        </p>
       </div>
     </div>
   );
 };
 
-export default VerifyOTP;
+export default VerifyOTP; 

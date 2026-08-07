@@ -1,31 +1,52 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
-
+import React from 'react'  
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from '../context/AuthContext';
 import ProtectedRoute from '../components/common/ProtectedRoute';
+
+// Auth pages
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
 import VerifyOTP from '../pages/auth/VerifyOTP';
 
-const AuthenticatedLanding = () => (
-  <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-    <div className="rounded-xl bg-white p-8 text-center shadow">
-      <h1 className="text-2xl font-bold text-slate-900">Authenticated</h1>
-      <p className="mt-2 text-slate-600">Your authentication foundation is active.</p>
-    </div>
-  </div>
-);
+// Organizer pages
+import MyEvents from '../pages/organizer/MyEvents';
+import EventBuilder from '../pages/organizer/EventBuilder';
 
-const AppRoutes = () => (
-  <Routes>
-    <Route path="/register" element={<Register />} />
-    <Route path="/verify-otp" element={<VerifyOTP />} />
-    <Route path="/login" element={<Login />} />
+const AppRoutes = () => {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/verify-otp" element={<VerifyOTP />} />
 
-    <Route element={<ProtectedRoute />}>
-      <Route path="/" element={<AuthenticatedLanding />} />
-    </Route>
+          {/* Organizer routes */}
+          <Route
+            path="/organizer/events"
+            element={
+              <ProtectedRoute allowedRoles={['organizer']}>
+                <MyEvents />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizer/events/new"
+            element={
+              <ProtectedRoute allowedRoles={['organizer']}>
+                <EventBuilder />
+              </ProtectedRoute>
+            }
+          />
 
-    <Route path="*" element={<Navigate to="/login" replace />} />
-  </Routes>
-);
+          {/* Default redirect */}
+          <Route path="/" element={<Login />} />
+          <Route path="*" element={<Login />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  );
+};
 
-export default AppRoutes;
+export default AppRoutes; 
