@@ -41,7 +41,7 @@ const Register = () => {
     try {
       const payload = { ...formData };
       delete payload.confirmPassword;
-      
+
       if (payload.role === 'organizer') {
         delete payload.industry;
         delete payload.budgetTier;
@@ -52,16 +52,12 @@ const Register = () => {
       const res = await authApi.register(payload);
       const { token, user } = res.data.data;
 
-      // Auto-login after successful registration
       login(token, user);
 
-      // Redirect based on role
       if (user.role === 'organizer') {
         navigate('/organizer/events');
-      } else if (user.role === 'sponsor') {
-        navigate('/sponsor/discover');
       } else {
-        navigate('/');
+        navigate('/sponsor/discover');
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
@@ -71,254 +67,219 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
-        <h2 className="text-2xl font-bold text-center text-gray-900 mb-2">
-          Create Account
-        </h2>
-        <p className="text-center text-gray-500 mb-6">
-          Join SponsorMetrics BD
-        </p>
+    <div className="min-h-screen bg-slate-900 flex items-center justify-center py-12 px-4">
+      <div className="max-w-md w-full">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2">SponsorMetrics BD</h1>
+          <p className="text-gray-400">Enterprise Console</p>
+        </div>
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
-            {error}
-          </div>
-        )}
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Create Account</h2>
+          <p className="text-gray-500 mb-6">Join the sponsorship marketplace</p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {step === 1 && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  I am a
-                </label>
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {step === 1 && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">I am a</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, role: 'organizer' })}
+                      className={`py-3 px-4 rounded-lg border-2 text-sm font-medium transition-all ${
+                        formData.role === 'organizer'
+                          ? 'border-amber-500 bg-amber-50 text-amber-700'
+                          : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                      }`}
+                    >
+                      Event Organizer
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, role: 'sponsor' })}
+                      className={`py-3 px-4 rounded-lg border-2 text-sm font-medium transition-all ${
+                        formData.role === 'sponsor'
+                          ? 'border-amber-500 bg-amber-50 text-amber-700'
+                          : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                      }`}
+                    >
+                      Sponsor
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+                    placeholder="Your full name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+                    placeholder="you@example.com"
+                  />
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, role: 'organizer' })}
-                    className={`py-2 px-4 rounded-lg border-2 text-sm font-medium transition-colors ${
-                      formData.role === 'organizer'
-                        ? 'border-blue-600 bg-blue-50 text-blue-700'
-                        : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                    }`}
-                  >
-                    Event Organizer
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, role: 'sponsor' })}
-                    className={`py-2 px-4 rounded-lg border-2 text-sm font-medium transition-colors ${
-                      formData.role === 'sponsor'
-                        ? 'border-blue-600 bg-blue-50 text-blue-700'
-                        : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                    }`}
-                  >
-                    Sponsor
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name *
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Your full name"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email *
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="you@example.com"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Password *
-                  </label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                    minLength={6}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="••••••"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Confirm *
-                  </label>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="••••••"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setStep(2)}
-                className="w-full py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-              >
-                Next: Organization Details
-              </button>
-            </>
-          )}
-
-          {step === 2 && (
-            <>
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                className="text-sm text-gray-500 hover:text-gray-700 mb-4"
-              >
-                Back
-              </button>
-
-              {formData.role === 'organizer' ? (
-                <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Organization Name *
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
                     <input
-                      type="text"
-                      name="organizationName"
-                      value={formData.organizationName}
+                      type="password"
+                      name="password"
+                      value={formData.password}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="e.g., NSU CSE Club"
+                      minLength={6}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+                      placeholder="••••••"
                     />
                   </div>
-
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Organization Type
-                    </label>
-                    <select
-                      name="organizationType"
-                      value={formData.organizationType}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="university_club">University Club</option>
-                      <option value="ngo">NGO</option>
-                      <option value="startup">Startup</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Company Name *
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Confirm</label>
                     <input
-                      type="text"
-                      name="organizationName"
-                      value={formData.organizationName}
+                      type="password"
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="e.g., Grameenphone Ltd."
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+                      placeholder="••••••"
                     />
                   </div>
+                </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Industry
-                    </label>
-                    <input
-                      type="text"
-                      name="industry"
-                      value={formData.industry}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="e.g., Telecommunications"
-                    />
-                  </div>
+                <button
+                  type="button"
+                  onClick={() => setStep(2)}
+                  className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg transition-colors"
+                >
+                  Next Step →
+                </button>
+              </>
+            )}
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Budget Tier
-                    </label>
-                    <select
-                      name="budgetTier"
-                      value={formData.budgetTier}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="small">Small (&lt; 50K BDT)</option>
-                      <option value="medium">Medium (50K - 2L BDT)</option>
-                      <option value="large">Large (2L - 10L BDT)</option>
-                      <option value="enterprise">Enterprise (&gt; 10L BDT)</option>
-                    </select>
-                  </div>
-                </>
-              )}
+            {step === 2 && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="text-sm text-gray-500 hover:text-gray-700 mb-4 flex items-center gap-1"
+                >
+                  ← Back
+                </button>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="+880 1XXX-XXXXXX"
-                />
-              </div>
+                {formData.role === 'organizer' ? (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Organization Name</label>
+                      <input
+                        type="text"
+                        name="organizationName"
+                        value={formData.organizationName}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+                        placeholder="NSU CSE Club"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Organization Type</label>
+                      <select
+                        name="organizationType"
+                        value={formData.organizationType}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none bg-white"
+                      >
+                        <option value="university_club">University Club</option>
+                        <option value="ngo">NGO</option>
+                        <option value="startup">Startup</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+                      <input
+                        type="text"
+                        name="organizationName"
+                        value={formData.organizationName}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+                        placeholder="Grameenphone Ltd."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Industry</label>
+                      <input
+                        type="text"
+                        name="industry"
+                        value={formData.industry}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+                        placeholder="Telecommunications"
+                      />
+                    </div>
+                  </>
+                )}
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50"
-              >
-                {loading ? 'Creating Account...' : 'Create Account'}
-              </button>
-            </>
-          )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+                    placeholder="+880 1XXX-XXXXXX"
+                  />
+                </div>
 
-          <p className="text-center text-sm text-gray-500 mt-4">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {loading ? 'Creating Account...' : 'Create Account'}
+                </button>
+              </>
+            )}
+          </form>
+
+          <p className="text-center text-sm text-gray-500 mt-6">
             Already have an account?{' '}
-            <Link to="/login" className="text-blue-600 hover:underline">
-              Log in
+            <Link to="/login" className="text-amber-600 hover:text-amber-700 font-medium">
+              Sign in
             </Link>
           </p>
-        </form>
+        </div>
       </div>
     </div>
   );
 };
 
-export default Register;
+export default Register; 

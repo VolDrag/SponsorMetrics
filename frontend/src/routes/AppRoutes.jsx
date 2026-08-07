@@ -7,6 +7,7 @@ import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
 import MyEvents from '../pages/organizer/MyEvents';
 import EventBuilder from '../pages/organizer/EventBuilder';
+import EventDetails from '../pages/organizer/EventDetails'; // ← ADD THIS
 
 const AppRoutes = () => {
   return (
@@ -31,6 +32,14 @@ const AppRoutes = () => {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/organizer/events/:id" 
+            element={
+              <ProtectedRoute allowedRoles={['organizer']}>
+                <EventDetails />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/" element={<Login />} />
           <Route path="*" element={<Login />} />
         </Routes>
@@ -39,4 +48,4 @@ const AppRoutes = () => {
   );
 };
 
-export default AppRoutes;
+export default AppRoutes; 

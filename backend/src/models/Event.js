@@ -55,8 +55,8 @@ const eventSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Index for sponsor discovery queries
+// Only non-geospatial indexes
 eventSchema.index({ status: 1, date: 1 });
-eventSchema.index({ location: '2dsphere' }); // For geo queries later
+// REMOVED: eventSchema.index({ location: '2dsphere' });
 
 module.exports = mongoose.model('Event', eventSchema);
