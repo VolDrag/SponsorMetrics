@@ -1,68 +1,95 @@
-const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+const { body } = require('express-validator');
 
-const validateRegister = (req, res, next) => {
-  const { name, email, password, role } = req.body;
+exports.registerValidation = [
+  body('name')
+    .trim()
+    .notEmpty()
+    .withMessage('Name is required')
+    .isLength({ max: 100 })
+    .withMessage('Name cannot exceed 100 characters'),
 
-  if (!name || typeof name !== 'string' || !name.trim()) {
-    return res.status(400).json({ message: 'Name is required.' });
-  }
+  body('email')
+    .trim()
+    .notEmpty()
+    .withMessage('Email is required')
+    .isEmail()
+    .withMessage('Please provide a valid email')
+    .normalizeEmail(),
 
-  if (!email || !validateEmail(String(email).toLowerCase())) {
-    return res.status(400).json({ message: 'A valid email is required.' });
-  }
+  body('password')
+    .trim()
+    .notEmpty()
+    .withMessage('Password is required')
+    .isLength({ min: 6 })
+    .withMessage('Password must be at least 6 characters'),
 
-  if (!password || typeof password !== 'string' || password.length < 8) {
-    return res.status(400).json({ message: 'Password must be at least 8 characters long.' });
-  }
+  body('role')
+    .notEmpty()
+    .withMessage('Role is required')
+    .isIn(['organizer', 'sponsor'])
+    .withMessage('Role must be organizer or sponsor'),
 
-  if (!role || !['organizer', 'sponsor'].includes(role)) {
-    return res.status(400).json({ message: 'Role must be organizer or sponsor.' });
-  }
+  body('organizationName')
+    .optional()
+    .trim()
+    .isLength({ max: 200 }),
 
-  return next();
-};
+  body('organizationType')
+    .optional()
+    .isIn(['university_club', 'ngo', 'startup', 'other']),
 
-const validateLogin = (req, res, next) => {
-  const { email, password } = req.body;
+  body('industry')
+    .optional()
+    .trim(),
 
-  if (!email || !validateEmail(String(email).toLowerCase())) {
-    return res.status(400).json({ message: 'A valid email is required.' });
-  }
+  body('budgetTier')
+    .optional()
+    .isIn(['small', 'medium', 'large', 'enterprise']),
 
-  if (!password || typeof password !== 'string' || password.length < 8) {
-    return res.status(400).json({ message: 'Password must be at least 8 characters long.' });
-  }
+  body('phone')
+    .optional()
+    .trim()
+    .matches(/^[0-9+\-\s()]+$/)
+    .withMessage('Invalid phone number format'),
+];
 
-  return next();
-};
+exports.loginValidation = [
+  body('email')
+    .trim()
+    .notEmpty()
+    .withMessage('Email is required')
+    .isEmail()
+    .withMessage('Please provide a valid email'),
 
-const validateVerifyOTP = (req, res, next) => {
-  const { email, otp } = req.body;
+  body('password')
+    .trim()
+    .notEmpty()
+    .withMessage('Password is required'),
+];
 
-  if (!email || !validateEmail(String(email).toLowerCase())) {
-    return res.status(400).json({ message: 'A valid email is required.' });
-  }
+exports.verifyOTPValidation = [
+  body('email')
+    .trim()
+    .notEmpty()
+    .withMessage('Email is required')
+    .isEmail()
+    .withMessage('Please provide a valid email'),
 
-  if (!otp || !/^\d{6}$/.test(String(otp))) {
-    return res.status(400).json({ message: 'OTP must be a 6-digit number.' });
-  }
+  body('otp')
+    .trim()
+    .notEmpty()
+    .withMessage('OTP is required')
+    .isLength({ min: 6, max: 6 })
+    .withMessage('OTP must be 6 digits')
+    .isNumeric()
+    .withMessage('OTP must contain only numbers'),
+];
 
-  return next();
-};
-
-const validateResendOTP = (req, res, next) => {
-  const { email } = req.body;
-
-  if (!email || !validateEmail(String(email).toLowerCase())) {
-    return res.status(400).json({ message: 'A valid email is required.' });
-  }
-
-  return next();
-};
-
-module.exports = {
-  validateRegister,
-  validateLogin,
-  validateVerifyOTP,
-  validateResendOTP,
-};
+exports.resendOTPValidation = [
+  body('email')
+    .trim()
+    .notEmpty()
+    .withMessage('Email is required')
+    .isEmail()
+    .withMessage('Please provide a valid email'),
+];

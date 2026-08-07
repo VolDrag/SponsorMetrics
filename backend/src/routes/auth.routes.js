@@ -1,28 +1,22 @@
 const express = require('express');
-
-const auth = require('../middleware/auth');
-const {
-  register,
-  verifyOTP,
-  login,
-  resendOTP,
-  logout,
-  getMe,
-} = require('../controllers/auth.controller');
-const {
-  validateRegister,
-  validateLogin,
-  validateVerifyOTP,
-  validateResendOTP,
-} = require('../validators/auth.validator');
-
 const router = express.Router();
+const authController = require('../controllers/auth.controller');
+const { authenticate } = require('../middleware/auth');
+const {
+  registerValidation,
+  loginValidation,
+  verifyOTPValidation,
+  resendOTPValidation,
+} = require('../validators/auth.validator');
+const { validate } = require('../middleware/validate');
 
-router.post('/register', validateRegister, register);
-router.post('/verify-otp', validateVerifyOTP, verifyOTP);
-router.post('/login', validateLogin, login);
-router.post('/resend-otp', validateResendOTP, resendOTP);
-router.post('/logout', auth, logout);
-router.get('/me', auth, getMe);
+// Public routes
+router.post('/register', registerValidation, validate, authController.register);
+router.post('/verify-otp', verifyOTPValidation, validate, authController.verifyOTP);
+router.post('/resend-otp', resendOTPValidation, validate, authController.resendOTP);
+router.post('/login', loginValidation, validate, authController.login);
+
+// Protected routes
+router.get('/me', authenticate, authController.getMe);
 
 module.exports = router;
