@@ -1,15 +1,16 @@
-import React from 'react'
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import authApi from '../../services/authApi';
 
 const Register = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
- 
-  const [formData, setFormData] = useState({ 
+
+  const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
@@ -21,7 +22,7 @@ const Register = () => {
     budgetTier: 'small',
     phone: '',
   });
- 
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -41,7 +42,6 @@ const Register = () => {
       const payload = { ...formData };
       delete payload.confirmPassword;
       
-      // Only send relevant fields based on role
       if (payload.role === 'organizer') {
         delete payload.industry;
         delete payload.budgetTier;
@@ -50,10 +50,19 @@ const Register = () => {
       }
 
       const res = await authApi.register(payload);
-      
-      // Store email for OTP page
-      localStorage.setItem('pendingEmail', formData.email);
-      navigate('/verify-otp');
+      const { token, user } = res.data.data;
+
+      // Auto-login after successful registration
+      login(token, user);
+
+      // Redirect based on role
+      if (user.role === 'organizer') {
+        navigate('/organizer/events');
+      } else if (user.role === 'sponsor') {
+        navigate('/sponsor/discover');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
     } finally {
@@ -78,7 +87,6 @@ const Register = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Step 1: Basic Info */}
           {step === 1 && (
             <>
               <div>
@@ -95,7 +103,7 @@ const Register = () => {
                         : 'border-gray-200 text-gray-600 hover:border-gray-300'
                     }`}
                   >
-                    📅 Event Organizer
+                    Event Organizer
                   </button>
                   <button
                     type="button"
@@ -106,7 +114,7 @@ const Register = () => {
                         : 'border-gray-200 text-gray-600 hover:border-gray-300'
                     }`}
                   >
-                    💼 Sponsor
+                    Sponsor
                   </button>
                 </div>
               </div>
@@ -178,12 +186,11 @@ const Register = () => {
                 onClick={() => setStep(2)}
                 className="w-full py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
               >
-                Next: Organization Details →
+                Next: Organization Details
               </button>
             </>
           )}
 
-          {/* Step 2: Organization Details */}
           {step === 2 && (
             <>
               <button
@@ -191,7 +198,7 @@ const Register = () => {
                 onClick={() => setStep(1)}
                 className="text-sm text-gray-500 hover:text-gray-700 mb-4"
               >
-                ← Back
+                Back
               </button>
 
               {formData.role === 'organizer' ? (
@@ -314,4 +321,4 @@ const Register = () => {
   );
 };
 
-export default Register; 
+export default Register;
