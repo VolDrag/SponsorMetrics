@@ -1,8 +1,11 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
-
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from '../context/AuthContext';
 import ProtectedRoute from '../components/common/ProtectedRoute';
+
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
+<<<<<<< HEAD
 import VerifyOTP from '../pages/auth/VerifyOTP';
 // ifty
 import TierPackageCreator from '../pages/organizer/TierPackageCreator';
@@ -39,5 +42,40 @@ const AppRoutes = () => (
     <Route path="*" element={<Navigate to="/login" replace />} />
   </Routes>
 );
+=======
+import MyEvents from '../pages/organizer/MyEvents';
+import EventBuilder from '../pages/organizer/EventBuilder';
+
+const AppRoutes = () => {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route
+            path="/organizer/events"
+            element={
+              <ProtectedRoute allowedRoles={['organizer']}>
+                <MyEvents />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizer/events/new"
+            element={
+              <ProtectedRoute allowedRoles={['organizer']}>
+                <EventBuilder />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/" element={<Login />} />
+          <Route path="*" element={<Login />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  );
+};
+>>>>>>> 39bb17d90599a739c5041e532ad6f933f7b961a3
 
 export default AppRoutes;

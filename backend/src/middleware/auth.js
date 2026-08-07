@@ -1,32 +1,55 @@
 const jwt = require('jsonwebtoken');
-
 const User = require('../models/User');
 
-const auth = async (req, res, next) => {
+exports.authenticate = async (req, res, next) => {
   try {
-    const cookieToken = req.cookies ? req.cookies.token : null;
-    const headerToken = req.headers.authorization && req.headers.authorization.startsWith('Bearer ')
-      ? req.headers.authorization.split(' ')[1]
-      : null;
+    let token;
 
-    const token = cookieToken || headerToken;
-
-    if (!token) {
-      return res.status(401).json({ message: 'Authentication required.' });
+    // Check Authorization header
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith('Bearer')
+    ) {
+      token = req.headers.authorization.split(' ')[1];
     }
 
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'Not authorized. No token provided.',
+      });
+    }
+
+    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+<<<<<<< HEAD
     const user = await User.findById(decoded.id).select('-passwordHash');
+=======
+
+    // Check if user still exists
+    const user = await User.findById(decoded.id);
+>>>>>>> 39bb17d90599a739c5041e532ad6f933f7b961a3
 
     if (!user) {
-      return res.status(401).json({ message: 'Invalid authentication token.' });
+      return res.status(401).json({
+        success: false,
+        message: 'User no longer exists',
+      });
+    }
+
+    if (!user.isActive) {
+      return res.status(401).json({
+        success: false,
+        message: 'User account is deactivated',
+      });
     }
 
     req.user = user;
-    return next();
+    next();
   } catch (error) {
-    return res.status(401).json({ message: 'Invalid or expired token.' });
+    return res.status(401).json({
+      success: false,
+      message: 'Not authorized. Invalid token.',
+    });
   }
-};
-
-module.exports = auth;
+}; 

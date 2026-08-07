@@ -1,119 +1,321 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-
 import { useAuth } from '../../context/AuthContext';
+import authApi from '../../services/authApi';
 
 const Register = () => {
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { login } = useAuth();
+  const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
   const [formData, setFormData] = useState({
-    role: 'organizer',
     name: '',
     email: '',
     password: '',
+    confirmPassword: '',
+    role: 'organizer',
     organizationName: '',
+    organizationType: 'university_club',
+    industry: '',
+    budgetTier: 'small',
+    phone: '',
   });
-  const [error, setError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
     setError('');
-    setSubmitting(true);
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      setLoading(false);
+      return;
+    }
 
     try {
-      await register(formData);
-      navigate('/verify-otp', { state: { email: formData.email } });
-    } catch (apiError) {
-      setError(apiError.response?.data?.message || 'Registration failed.');
+      const payload = { ...formData };
+      delete payload.confirmPassword;
+      
+      if (payload.role === 'organizer') {
+        delete payload.industry;
+        delete payload.budgetTier;
+      } else {
+        delete payload.organizationType;
+      }
+
+      const res = await authApi.register(payload);
+      const { token, user } = res.data.data;
+
+      // Auto-login after successful registration
+      login(token, user);
+
+      // Redirect based on role
+      if (user.role === 'organizer') {
+        navigate('/organizer/events');
+      } else if (user.role === 'sponsor') {
+        navigate('/sponsor/discover');
+      } else {
+        navigate('/');
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Registration failed');
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-8">
-      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg">
-        <h1 className="text-2xl font-bold text-slate-900">Create account</h1>
-        <p className="mt-1 text-sm text-slate-600">Start as an Organizer or Sponsor.</p>
-
-        <div className="mt-4 grid grid-cols-2 rounded-lg bg-slate-100 p-1">
-          {['organizer', 'sponsor'].map((roleOption) => (
-            <button
-              key={roleOption}
-              type="button"
-              onClick={() => setFormData((prev) => ({ ...prev, role: roleOption }))}
-              className={`rounded-md px-3 py-2 text-sm font-medium transition ${
-                formData.role === roleOption
-                  ? 'bg-white text-slate-900 shadow'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              {roleOption === 'organizer' ? 'Organizer' : 'Sponsor'}
-            </button>
-          ))}
-        </div>
-
-        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-          <input
-            type="text"
-            name="name"
-            placeholder="Full name"
-            value={formData.name}
-            onChange={handleChange}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-indigo-500"
-            required
-          />
-          <input
-            type="email"
-            name="email"
-            placeholder="Email address"
-            value={formData.email}
-            onChange={handleChange}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-indigo-500"
-            required
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password (minimum 8 characters)"
-            value={formData.password}
-            onChange={handleChange}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-indigo-500"
-            minLength={8}
-            required
-          />
-          <input
-            type="text"
-            name="organizationName"
-            placeholder="Organization name"
-            value={formData.organizationName}
-            onChange={handleChange}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-indigo-500"
-          />
-
-          {error ? <p className="text-sm text-red-600">{error}</p> : null}
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {submitting ? 'Registering...' : 'Register'}
-          </button>
-        </form>
-
-        <p className="mt-4 text-sm text-slate-600">
-          Already have an account?{' '}
-          <Link className="font-semibold text-indigo-600 hover:text-indigo-700" to="/login">
-            Log in
-          </Link>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
+      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
+        <h2 className="text-2xl font-bold text-center text-gray-900 mb-2">
+          Create Account
+        </h2>
+        <p className="text-center text-gray-500 mb-6">
+          Join SponsorMetrics BD
         </p>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {step === 1 && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  I am a
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, role: 'organizer' })}
+                    className={`py-2 px-4 rounded-lg border-2 text-sm font-medium transition-colors ${
+                      formData.role === 'organizer'
+                        ? 'border-blue-600 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                    }`}
+                  >
+                    Event Organizer
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, role: 'sponsor' })}
+                    className={`py-2 px-4 rounded-lg border-2 text-sm font-medium transition-colors ${
+                      formData.role === 'sponsor'
+                        ? 'border-blue-600 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                    }`}
+                  >
+                    Sponsor
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Full Name *
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Your full name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email *
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="you@example.com"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Password *
+                  </label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    minLength={6}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="••••••"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Confirm *
+                  </label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="••••••"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setStep(2)}
+                className="w-full py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+              >
+                Next: Organization Details
+              </button>
+            </>
+          )}
+
+          {step === 2 && (
+            <>
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="text-sm text-gray-500 hover:text-gray-700 mb-4"
+              >
+                Back
+              </button>
+
+              {formData.role === 'organizer' ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Organization Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="organizationName"
+                      value={formData.organizationName}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="e.g., NSU CSE Club"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Organization Type
+                    </label>
+                    <select
+                      name="organizationType"
+                      value={formData.organizationType}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="university_club">University Club</option>
+                      <option value="ngo">NGO</option>
+                      <option value="startup">Startup</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Company Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="organizationName"
+                      value={formData.organizationName}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="e.g., Grameenphone Ltd."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Industry
+                    </label>
+                    <input
+                      type="text"
+                      name="industry"
+                      value={formData.industry}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="e.g., Telecommunications"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Budget Tier
+                    </label>
+                    <select
+                      name="budgetTier"
+                      value={formData.budgetTier}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="small">Small (&lt; 50K BDT)</option>
+                      <option value="medium">Medium (50K - 2L BDT)</option>
+                      <option value="large">Large (2L - 10L BDT)</option>
+                      <option value="enterprise">Enterprise (&gt; 10L BDT)</option>
+                    </select>
+                  </div>
+                </>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="+880 1XXX-XXXXXX"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50"
+              >
+                {loading ? 'Creating Account...' : 'Create Account'}
+              </button>
+            </>
+          )}
+
+          <p className="text-center text-sm text-gray-500 mt-4">
+            Already have an account?{' '}
+            <Link to="/login" className="text-blue-600 hover:underline">
+              Log in
+            </Link>
+          </p>
+        </form>
       </div>
     </div>
   );

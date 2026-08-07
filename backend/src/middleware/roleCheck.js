@@ -1,13 +1,19 @@
-const roleCheck = (...allowedRoles) => (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({ message: 'Authentication required.' });
-  }
+exports.requireRole = (...allowedRoles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Not authenticated',
+      });
+    }
 
-  if (!allowedRoles.includes(req.user.role)) {
-    return res.status(403).json({ message: 'Forbidden: insufficient role permission.' });
-  }
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: `Access denied. Required role: ${allowedRoles.join(' or ')}`,
+      });
+    }
 
-  return next();
-};
-
-module.exports = roleCheck;
+    next();
+  };
+}; 

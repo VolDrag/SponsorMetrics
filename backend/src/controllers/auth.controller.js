@@ -1,35 +1,19 @@
 const jwt = require('jsonwebtoken');
-
+const crypto = require('crypto');
 const User = require('../models/User');
-const { sendOTPEmail } = require('../services/email.service');
 
-const OTP_VALIDITY_MS = 10 * 60 * 1000;
-const TOKEN_EXPIRES_IN = '7d';
-const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
-
-const generateOTP = () => String(Math.floor(100000 + Math.random() * 900000));
-
-const signToken = (user) =>
-  jwt.sign(
-    {
-      id: user._id,
-      role: user.role,
-    },
-    process.env.JWT_SECRET,
-    { expiresIn: TOKEN_EXPIRES_IN }
-  );
-
-const setAuthCookie = (res, token) => {
-  res.cookie('token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: COOKIE_MAX_AGE,
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   });
 };
 
-const register = async (req, res) => {
+// @desc    Register new user (NO EMAIL VERIFICATION)
+// @route   POST /api/auth/register
+// @access  Public
+exports.register = async (req, res) => {
   try {
+<<<<<<< HEAD
     const { name, email, password, role, organizationName } = req.body;
     const normalizedEmail = String(email).toLowerCase();
 
@@ -49,137 +33,177 @@ const register = async (req, res) => {
       name: name.trim(),
       email: normalizedEmail,
       passwordHash: password,
+=======
+    const {
+      name,
+      email,
+      password,
+>>>>>>> 39bb17d90599a739c5041e532ad6f933f7b961a3
       role,
-      isVerified: false,
-      otp,
-      otpExpiry,
-      organizationName: organizationName ? String(organizationName).trim() : undefined,
-    });
+      organizationName,
+      organizationType,
+      industry,
+      budgetTier,
+      phone,
+    } = req.body;
 
-    await sendOTPEmail(user.email, otp);
-
-    return res.status(201).json({
-      message: 'Registration successful. Verify OTP sent to email.',
-      email: user.email,
-    });
-  } catch (error) {
-    return res.status(500).json({ message: 'Failed to register user.', error: error.message });
-  }
-};
-
-const verifyOTP = async (req, res) => {
-  try {
-    const { email, otp } = req.body;
-    const normalizedEmail = String(email).toLowerCase();
-
-    const user = await User.findOne({
-      email: normalizedEmail,
-      otp: String(otp),
-      otpExpiry: { $gt: new Date() },
-    });
-
-    if (!user) {
-      return res.status(400).json({ message: 'Invalid or expired OTP.' });
+    // Check if user exists
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email already registered',
+      });
     }
 
-    user.isVerified = true;
-    user.otp = undefined;
-    user.otpExpiry = undefined;
-    await user.save();
+    // Create user with isVerified = true (skip verification)
+    const user = await User.create({
+      name,
+      email: email.toLowerCase(),
+      password,
+      role,
+      organizationName,
+      organizationType,
+      industry,
+      budgetTier,
+      phone,
+      isVerified: true,
+    });
 
-    const token = signToken(user);
-    setAuthCookie(res, token);
+    // Generate token immediately
+    const token = generateToken(user._id);
 
+<<<<<<< HEAD
     const safeUser = await User.findById(user._id).select('-passwordHash');
 
     return res.status(200).json({
       message: 'OTP verified successfully.',
       token,
       user: safeUser,
+=======
+    res.status(201).json({
+      success: true,
+      message: 'Registration successful!',
+      data: {
+        token,
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          isVerified: user.isVerified,
+        },
+      },
+>>>>>>> 39bb17d90599a739c5041e532ad6f933f7b961a3
     });
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to verify OTP.', error: error.message });
+    res.status(500).json({
+      success: false,
+      message: 'Registration failed',
+      error: error.message,
+    });
   }
 };
 
-const login = async (req, res) => {
+// @desc    Login user
+// @route   POST /api/auth/login
+// @access  Public
+exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const normalizedEmail = String(email).toLowerCase();
 
+<<<<<<< HEAD
     const user = await User.findOne({ email: normalizedEmail }).select('+passwordHash');
+=======
+    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+
+>>>>>>> 39bb17d90599a739c5041e532ad6f933f7b961a3
     if (!user) {
-      return res.status(401).json({ message: 'Invalid email or password.' });
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password',
+      });
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid email or password.' });
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password',
+      });
     }
 
-    if (!user.isVerified) {
-      return res.status(403).json({ message: 'Account is not verified. Please verify OTP first.' });
+    if (!user.isActive) {
+      return res.status(403).json({
+        success: false,
+        message: 'Account is deactivated',
+      });
     }
 
-    const token = signToken(user);
-    setAuthCookie(res, token);
+    const token = generateToken(user._id);
 
+<<<<<<< HEAD
     const safeUser = await User.findById(user._id).select('-passwordHash');
 
     return res.status(200).json({
       message: 'Login successful.',
       token,
       user: safeUser,
+=======
+    res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      data: {
+        token,
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          isVerified: user.isVerified,
+          organizationName: user.organizationName,
+          industry: user.industry,
+        },
+      },
+>>>>>>> 39bb17d90599a739c5041e532ad6f933f7b961a3
     });
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to login.', error: error.message });
+    res.status(500).json({
+      success: false,
+      message: 'Login failed',
+      error: error.message,
+    });
   }
 };
 
-const resendOTP = async (req, res) => {
+// @desc    Get current user
+// @route   GET /api/auth/me
+// @access  Private
+exports.getMe = async (req, res) => {
   try {
-    const { email } = req.body;
-    const normalizedEmail = String(email).toLowerCase();
+    const user = await User.findById(req.user.id);
 
-    const user = await User.findOne({ email: normalizedEmail });
-    if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
-    }
-
-    if (user.isVerified) {
-      return res.status(400).json({ message: 'Account is already verified.' });
-    }
-
-    const otp = generateOTP();
-    user.otp = otp;
-    user.otpExpiry = new Date(Date.now() + OTP_VALIDITY_MS);
-    await user.save();
-
-    await sendOTPEmail(user.email, otp);
-
-    return res.status(200).json({ message: 'OTP resent successfully.' });
+    res.status(200).json({
+      success: true,
+      data: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isVerified: user.isVerified,
+        organizationName: user.organizationName,
+        organizationType: user.organizationType,
+        industry: user.industry,
+        budgetTier: user.budgetTier,
+        phone: user.phone,
+        profilePicture: user.profilePicture,
+      },
+    });
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to resend OTP.', error: error.message });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get user data',
+      error: error.message,
+    });
   }
-};
-
-const logout = async (req, res) => {
-  res.clearCookie('token', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-  });
-
-  return res.status(200).json({ message: 'Logged out successfully.' });
-};
-
-const getMe = async (req, res) => res.status(200).json({ user: req.user });
-
-module.exports = {
-  register,
-  verifyOTP,
-  login,
-  resendOTP,
-  logout,
-  getMe,
 };

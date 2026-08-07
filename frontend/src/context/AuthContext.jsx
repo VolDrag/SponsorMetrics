@@ -1,72 +1,70 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-
-import api from '../services/api';
+import React from 'react'
+import { createContext, useContext, useState, useEffect } from 'react';
+import authApi from '../services/authApi';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [otpEmail, setOtpEmail] = useState('');
-
+ 
   useEffect(() => {
-    const restoreSession = async () => {
-      try {
-        const response = await api.get('/api/auth/me');
-        setUser(response.data.user);
-      } catch (error) {
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    restoreSession();
+    checkAuth();
   }, []);
 
-  const register = async (payload) => {
-    const response = await api.post('/api/auth/register', payload);
-    setOtpEmail(payload.email);
-    return response.data;
+  const checkAuth = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await authApi.getMe();
+      setUser(res.data.data);
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      logout();
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const verifyOTP = async (payload) => {
-    const response = await api.post('/api/auth/verify-otp', payload);
-    setUser(response.data.user);
-    return response.data;
+  const login = (token, userData) => {
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
   };
 
-  const login = async (payload) => {
-    const response = await api.post('/api/auth/login', payload);
-    setUser(response.data.user);
-    return response.data;
-  };
-
-  const logout = async () => {
-    await api.post('/api/auth/logout');
+  const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setUser(null);
   };
 
-  const value = useMemo(
-    () => ({
-      user,
-      loading,
-      otpEmail,
-      register,
-      verifyOTP,
-      login,
-      logout,
-    }),
-    [user, loading, otpEmail]
-  );
+  const value = {
+    user,
+    setUser,
+    login,
+    logout,
+    loading,
+    isAuthenticated: !!user,
+    isOrganizer: user?.role === 'organizer',
+    isSponsor: user?.role === 'sponsor',
+    isAdmin: user?.role === 'admin',
+  };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider.');
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-};
+}; 
