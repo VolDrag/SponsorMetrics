@@ -1,14 +1,10 @@
-import React from 'react'  
+import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '../context/AuthContext';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 
-// Auth pages
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
-import VerifyOTP from '../pages/auth/VerifyOTP';
-
-// Organizer pages
 import MyEvents from '../pages/organizer/MyEvents';
 import EventBuilder from '../pages/organizer/EventBuilder';
 
@@ -17,12 +13,8 @@ const AppRoutes = () => {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Public routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/verify-otp" element={<VerifyOTP />} />
-
-          {/* Organizer routes */}
           <Route
             path="/organizer/events"
             element={
@@ -39,8 +31,6 @@ const AppRoutes = () => {
               </ProtectedRoute>
             }
           />
-
-          {/* Default redirect */}
           <Route path="/" element={<Login />} />
           <Route path="*" element={<Login />} />
         </Routes>
@@ -49,4 +39,4 @@ const AppRoutes = () => {
   );
 };
 
-export default AppRoutes; 
+export default AppRoutes;
