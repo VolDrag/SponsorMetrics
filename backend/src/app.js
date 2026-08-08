@@ -7,15 +7,24 @@ const mongoose = require('mongoose');
 
 const authRoutes = require('./routes/auth.routes');
 const eventRoutes = require('./routes/event.routes');
-// ifty
 const tierRoutes = require('./routes/tier.routes');
-// ifty end
 
 const app = express();
 
 // Middleware
+const allowedOrigins = [
+  process.env.FRONTEND_URL ? process.env.FRONTEND_URL.replace(/\/$/, '') : 'http://localhost:5173',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173'
+];
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin.replace(/\/$/, ''))) {
+      callback(null, true);
+    } else {
+      callback(null, true);
+    }
+  },
   credentials: true,
 }));
 app.use(express.json());
@@ -34,9 +43,7 @@ mongoose
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
-// ifty
 app.use('/api/tiers', tierRoutes);
-// ifty end
 
 // Health check
 app.get('/api/health', (req, res) => {

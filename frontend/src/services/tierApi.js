@@ -1,4 +1,3 @@
-// ifty
 import api from './api';
 
 export const benefitPresets = [
@@ -44,4 +43,3 @@ const tierApi = {
 };
 
 export default tierApi;
-// ifty end

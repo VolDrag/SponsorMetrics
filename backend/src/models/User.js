@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
-    passwordHash: {
+    password: {
       type: String,
       required: [true, 'Password is required'],
       minlength: [6, 'Password must be at least 6 characters'],
@@ -32,29 +32,17 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-<<<<<<< HEAD
-=======
     organizationType: {
       type: String,
       enum: ['university_club', 'ngo', 'startup', 'other'],
     },
     // Sponsor-specific fields
->>>>>>> 39bb17d90599a739c5041e532ad6f933f7b961a3
     industry: {
       type: String,
       trim: true,
     },
     budgetTier: {
       type: String,
-<<<<<<< HEAD
-      enum: ['starter', 'growth', 'pro'],
-    },
-    credibilityScore: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 5,
-=======
       enum: ['small', 'medium', 'large', 'enterprise'],
     },
     // Common fields
@@ -77,25 +65,11 @@ const userSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true,
->>>>>>> 39bb17d90599a739c5041e532ad6f933f7b961a3
     },
   },
   { timestamps: true }
 );
 
-<<<<<<< HEAD
-userSchema.pre('save', async function preSave(next) {
-  if (!this.isModified('passwordHash')) {
-    return next();
-  }
-
-  this.passwordHash = await bcrypt.hash(this.passwordHash, 12);
-  return next();
-});
-
-userSchema.methods.comparePassword = function comparePassword(candidate) {
-  return bcrypt.compare(candidate, this.passwordHash);
-=======
 // Hash password before saving
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
@@ -106,7 +80,6 @@ userSchema.pre('save', async function (next) {
 // Compare password method
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
->>>>>>> 39bb17d90599a739c5041e532ad6f933f7b961a3
 };
 
 module.exports = mongoose.model('User', userSchema);
