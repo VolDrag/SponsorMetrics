@@ -2,13 +2,10 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
-<<<<<<< HEAD
   withCredentials: true,
-=======
   headers: {
     'Content-Type': 'application/json',
   },
->>>>>>> 39bb17d90599a739c5041e532ad6f933f7b961a3
 });
 
 // Add token to every request
@@ -27,7 +24,12 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const originalRequest = error.config;
+    
+    // Check if the 401 is from the login or register endpoints
+    const isAuthEndpoint = originalRequest.url.includes('/auth/login') || originalRequest.url.includes('/auth/register');
+
+    if (error.response?.status === 401 && !isAuthEndpoint) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';

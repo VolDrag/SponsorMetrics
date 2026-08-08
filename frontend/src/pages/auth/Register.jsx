@@ -50,7 +50,7 @@ const Register = () => {
       }
 
       const res = await authApi.register(payload);
-      const { token, user } = res.data.data;
+      const { token, user } = res.data;
 
       // Auto-login after successful registration
       login(token, user);
@@ -59,7 +59,7 @@ const Register = () => {
       if (user.role === 'organizer') {
         navigate('/organizer/events');
       } else if (user.role === 'sponsor') {
-        navigate('/sponsor/discover');
+        navigate('/sponsor/discovery');
       } else {
         navigate('/');
       }

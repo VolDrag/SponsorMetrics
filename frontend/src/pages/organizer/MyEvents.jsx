@@ -133,12 +133,20 @@ const MyEvents = () => {
                 )}
 
                 {event.status === 'published' && (
-                  <Link
-                    to={`/organizer/events/${event._id}/tiers`}
-                    className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-                  >
-                    Manage Tiers →
-                  </Link>
+                  <>
+                    <Link
+                      to={`/organizer/events/${event._id}/tiers`}
+                      className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                      Manage Tiers →
+                    </Link>
+                    <Link
+                      to={`/organizer/events/${event._id}/matches`}
+                      className="px-3 py-1.5 text-sm bg-[#F5A623] text-slate-900 font-bold rounded hover:bg-orange-500"
+                    >
+                      View Top Matches ✨
+                    </Link>
+                  </>
                 )}
               </div>
             </div>

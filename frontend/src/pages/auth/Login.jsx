@@ -26,7 +26,7 @@ const Login = () => {
 
     try {
       const res = await authApi.login(formData);
-      const { token, user } = res.data.data;
+      const { token, user } = res.data;
 
       login(token, user);
 
@@ -34,7 +34,7 @@ const Login = () => {
       if (user.role === 'organizer') {
         navigate('/organizer/events');
       } else if (user.role === 'sponsor') {
-        navigate('/sponsor/discover');
+        navigate('/sponsor/discovery');
       } else {
         navigate('/admin/dashboard');
       }
