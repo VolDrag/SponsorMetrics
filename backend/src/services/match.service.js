@@ -70,26 +70,50 @@ class MatchService {
 
     const matchedEvents = events.map(event => {
       let score = 15; // Base Alignment Score
+      const reasons = [];
 
-      // 1. Budget Tier Matching
-      if (sponsor.budgetTier === 'enterprise' && event.expectedCrowdSize > 500) score += 30;
-      else if ((sponsor.budgetTier === 'large' || sponsor.budgetTier === 'medium') && event.expectedCrowdSize > 200) score += 20;
-      else if (sponsor.budgetTier === 'small' && event.expectedCrowdSize <= 200) score += 10;
+      // 1. Budget Tier Matching (covers all enum values)
+      const enterpriseTiers = ['enterprise', 'pro'];
+      const largeTiers     = ['large', 'growth'];
+      const mediumTiers    = ['medium', 'starter'];
+      const smallTiers     = ['small'];
+
+      if (enterpriseTiers.includes(sponsor.budgetTier) && event.expectedCrowdSize > 500) {
+        score += 30;
+        reasons.push(`large-scale event (${event.expectedCrowdSize} attendees)`);
+      } else if (largeTiers.includes(sponsor.budgetTier) && event.expectedCrowdSize > 200) {
+        score += 20;
+        reasons.push(`mid-to-large event (${event.expectedCrowdSize} attendees)`);
+      } else if (mediumTiers.includes(sponsor.budgetTier) && event.expectedCrowdSize > 100) {
+        score += 15;
+        reasons.push(`growing event (${event.expectedCrowdSize} attendees)`);
+      } else if (smallTiers.includes(sponsor.budgetTier) && event.expectedCrowdSize <= 200) {
+        score += 10;
+        reasons.push(`community-scale event (${event.expectedCrowdSize} attendees)`);
+      }
 
       // 2. Credibility Score influence
-      score += (sponsor.credibilityScore * 3); // Max 15 points
+      const credPoints = Math.round(sponsor.credibilityScore * 3);
+      score += credPoints;
+      if (credPoints > 0) reasons.push(`sponsor credibility score (${sponsor.credibilityScore}/5)`);
 
       // 3. Social Media Reach influence
-      if (event.socialMediaReach > 10000) score += 15;
-      else if (event.socialMediaReach > 5000) score += 10;
+      if (event.socialMediaReach > 10000) {
+        score += 15;
+        reasons.push(`high social reach (${event.socialMediaReach.toLocaleString()})`);
+      } else if (event.socialMediaReach > 5000) {
+        score += 10;
+        reasons.push(`solid social reach (${event.socialMediaReach.toLocaleString()})`);
+      }
 
-      // Ensure score is capped at 100
       score = Math.min(score, 100);
 
       return {
         event,
         matchScore: score,
-        matchReason: `Matched based on crowd size (${event.expectedCrowdSize}) and budget tier.`,
+        matchReason: reasons.length > 0
+          ? `Strong fit based on: ${reasons.join(', ')}.`
+          : `General alignment with your budget tier and profile.`,
       };
     });
 
@@ -134,20 +158,42 @@ class MatchService {
 
     const matchedSponsors = sponsors.map(sponsor => {
       let score = 15; // Base Alignment Score
+      const reasons = [];
 
-      // 1. Budget Tier Matching
-      if (event.expectedCrowdSize > 500 && sponsor.budgetTier === 'enterprise') score += 30;
-      else if (event.expectedCrowdSize > 200 && (sponsor.budgetTier === 'large' || sponsor.budgetTier === 'medium')) score += 20;
-      else if (event.expectedCrowdSize <= 200 && sponsor.budgetTier === 'small') score += 10;
+      // 1. Budget Tier Matching (covers all enum values)
+      const enterpriseTiers = ['enterprise', 'pro'];
+      const largeTiers     = ['large', 'growth'];
+      const mediumTiers    = ['medium', 'starter'];
+      const smallTiers     = ['small'];
+
+      if (event.expectedCrowdSize > 500 && enterpriseTiers.includes(sponsor.budgetTier)) {
+        score += 30;
+        reasons.push(`enterprise-level budget matches large event scale`);
+      } else if (event.expectedCrowdSize > 200 && largeTiers.includes(sponsor.budgetTier)) {
+        score += 20;
+        reasons.push(`budget tier aligns with event size (${event.expectedCrowdSize} attendees)`);
+      } else if (event.expectedCrowdSize > 100 && mediumTiers.includes(sponsor.budgetTier)) {
+        score += 15;
+        reasons.push(`mid-range budget fits growing event`);
+      } else if (event.expectedCrowdSize <= 200 && smallTiers.includes(sponsor.budgetTier)) {
+        score += 10;
+        reasons.push(`small budget fits community event`);
+      }
 
       // 2. Credibility Score influence
-      score += (sponsor.credibilityScore * 3); // Max 15 points
+      const credPoints = Math.round(sponsor.credibilityScore * 3);
+      score += credPoints;
+      if (credPoints > 0) reasons.push(`credibility score ${sponsor.credibilityScore}/5`);
 
       // 3. Social Media Reach influence
-      if (event.socialMediaReach > 10000) score += 15;
-      else if (event.socialMediaReach > 5000) score += 10;
+      if (event.socialMediaReach > 10000) {
+        score += 15;
+        reasons.push(`event has high social media reach (${event.socialMediaReach.toLocaleString()})`);
+      } else if (event.socialMediaReach > 5000) {
+        score += 10;
+        reasons.push(`solid event social reach`);
+      }
 
-      // Ensure score is capped at 100
       score = Math.min(score, 100);
 
       return {
@@ -160,7 +206,9 @@ class MatchService {
           credibilityScore: sponsor.credibilityScore,
         },
         matchScore: score,
-        matchReason: `Matched based on ${sponsor.industry || 'general'} industry and budget tier.`,
+        matchReason: reasons.length > 0
+          ? `${sponsor.industry || 'General'} brand — ${reasons.join(', ')}.`
+          : `General alignment with event profile.`,
       };
     });
 

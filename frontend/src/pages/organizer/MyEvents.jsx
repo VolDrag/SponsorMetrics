@@ -221,12 +221,22 @@ const MyEvents = () => {
                     )}
 
                     {event.status === 'published' && (
-                      <Link
-                        to={`/organizer/events/${event._id}/tiers`}
-                        className="px-3 py-1.5 text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
-                      >
-                        Manage Tiers →
-                      </Link>
+                      <>
+                        <Link
+                          to={`/organizer/events/${event._id}/tiers`}
+                          className="px-3 py-1.5 text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+                        >
+                          Manage Tiers →
+                        </Link>
+                        {/* Rafi - links organizer to sponsor discovery matches */}
+                        <Link
+                          to={`/organizer/events/${event._id}/matches`}
+                          className="px-3 py-1.5 text-sm bg-[#1E2337] text-white font-bold rounded-lg hover:bg-slate-700 transition-colors"
+                        >
+                          View Top Matches ✨
+                        </Link>
+                        {/* Rafi end */}
+                      </>
                     )}
                   </div>
                 </div>
