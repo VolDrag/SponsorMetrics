@@ -37,6 +37,9 @@ app.use('/api/events', eventRoutes);
 // ifty
 app.use('/api/tiers', tierRoutes);
 // ifty end
+const matchRoutes = require('./routes/matchRoutes');
+
+app.use('/api/matches', matchRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

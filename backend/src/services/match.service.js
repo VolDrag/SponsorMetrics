@@ -2,10 +2,7 @@ const Event = require('../models/Event');
 const User = require('../models/User');
 const SponsorshipTier = require('../models/SponsorshipTier');
 
-/**
- * AI-driven matching algorithm simulation.
- * Calculates a match score based on various criteria.
- */
+
 class MatchService {
 // Rafi
   static async discoverEventsForSponsor(sponsorId, filters = {}) {
@@ -80,7 +77,7 @@ class MatchService {
       else if (sponsor.budgetTier === 'small' && event.expectedCrowdSize <= 200) score += 10;
 
       // 2. Credibility Score influence
-      score += (sponsor.credibilityScore * 3); // Max 25 points
+      score += (sponsor.credibilityScore * 3); // Max 15 points
 
       // 3. Social Media Reach influence
       if (event.socialMediaReach > 10000) score += 15;
@@ -136,7 +133,7 @@ class MatchService {
     const sponsors = await User.find(query);
 
     const matchedSponsors = sponsors.map(sponsor => {
-      let score = 40; // Base Alignment Score
+      let score = 15; // Base Alignment Score
 
       // 1. Budget Tier Matching
       if (event.expectedCrowdSize > 500 && sponsor.budgetTier === 'enterprise') score += 30;
@@ -144,7 +141,7 @@ class MatchService {
       else if (event.expectedCrowdSize <= 200 && sponsor.budgetTier === 'small') score += 10;
 
       // 2. Credibility Score influence
-      score += (sponsor.credibilityScore * 5); // Max 25 points
+      score += (sponsor.credibilityScore * 3); // Max 15 points
 
       // 3. Social Media Reach influence
       if (event.socialMediaReach > 10000) score += 15;

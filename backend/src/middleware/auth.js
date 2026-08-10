@@ -22,13 +22,7 @@ exports.authenticate = async (req, res, next) => {
 
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-<<<<<<< HEAD
-    const user = await User.findById(decoded.id).select('-passwordHash');
-=======
-
-    // Check if user still exists
-    const user = await User.findById(decoded.id);
->>>>>>> 39bb17d90599a739c5041e532ad6f933f7b961a3
+    const user = await User.findById(decoded.id).select('-password');
 
     if (!user) {
       return res.status(401).json({

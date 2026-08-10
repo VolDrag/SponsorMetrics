@@ -12,8 +12,6 @@ const { validate } = require('../middleware/validate');
 
 // Public routes
 router.post('/register', registerValidation, validate, authController.register);
-router.post('/verify-otp', verifyOTPValidation, validate, authController.verifyOTP);
-router.post('/resend-otp', resendOTPValidation, validate, authController.resendOTP);
 router.post('/login', loginValidation, validate, authController.login);
 
 // Protected routes
