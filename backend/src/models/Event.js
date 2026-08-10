@@ -56,7 +56,7 @@ const eventSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Non-geospatial indexes only (2dsphere removed to avoid MongoDB index issues)
 eventSchema.index({ status: 1, date: 1 });
-eventSchema.index({ location: '2dsphere' });
 
 module.exports = mongoose.model('Event', eventSchema);

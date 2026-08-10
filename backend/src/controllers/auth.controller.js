@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
 const User = require('../models/User');
 
 const generateToken = (id) => {
@@ -8,9 +7,6 @@ const generateToken = (id) => {
   });
 };
 
-// @desc    Register new user (NO EMAIL VERIFICATION)
-// @route   POST /api/auth/register
-// @access  Public
 exports.register = async (req, res) => {
   try {
     const {
@@ -40,7 +36,6 @@ exports.register = async (req, res) => {
       });
     }
 
-    // Create user with isVerified = true (skip verification)
     const user = await User.create({
       name: name.trim(),
       email: normalizedEmail,
@@ -54,9 +49,7 @@ exports.register = async (req, res) => {
       isVerified: true,
     });
 
-    // Generate token immediately
     const token = generateToken(user._id);
-
     const safeUser = await User.findById(user._id).select('-password');
 
     return res.status(201).json({
@@ -64,19 +57,13 @@ exports.register = async (req, res) => {
       message: 'Registration successful!',
       token,
       user: safeUser,
+      data: { token, user: { _id: user._id, name: user.name, email: user.email, role: user.role, isVerified: true } }
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Registration failed',
-      error: error.message,
-    });
+    res.status(500).json({ success: false, message: 'Registration failed', error: error.message });
   }
 };
 
-// @desc    Login user
-// @route   POST /api/auth/login
-// @access  Public
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -85,29 +72,16 @@ exports.login = async (req, res) => {
     const user = await User.findOne({ email: normalizedEmail }).select('+password');
 
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid email or password',
-      });
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
-
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid email or password',
-      });
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
-
     if (!user.isActive) {
-      return res.status(403).json({
-        success: false,
-        message: 'Account is deactivated',
-      });
+      return res.status(403).json({ success: false, message: 'Account is deactivated' });
     }
-
     const token = generateToken(user._id);
-
     const safeUser = await User.findById(user._id).select('-password');
 
     return res.status(200).json({
@@ -115,19 +89,13 @@ exports.login = async (req, res) => {
       message: 'Login successful',
       token,
       user: safeUser,
+      data: { token, user: { _id: user._id, name: user.name, email: user.email, role: user.role, isVerified: user.isVerified } }
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Login failed',
-      error: error.message,
-    });
+    res.status(500).json({ success: false, message: 'Login failed', error: error.message });
   }
 };
-
-// @desc    Get current user
-// @route   GET /api/auth/me
-// @access  Private
+ 
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
@@ -137,10 +105,6 @@ exports.getMe = async (req, res) => {
       data: user,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Failed to get user data',
-      error: error.message,
-    });
+    res.status(500).json({ success: false, message: 'Failed to get user data', error: error.message });
   }
 };

@@ -9,9 +9,9 @@ import VerifyOTP from '../pages/auth/VerifyOTP';
 import TierPackageCreator from '../pages/organizer/TierPackageCreator';
 import MyEvents from '../pages/organizer/MyEvents';
 import EventBuilder from '../pages/organizer/EventBuilder';
+import EventDetails from '../pages/organizer/EventDetails';
 
 import Discovery from '../pages/sponsor/Discovery';
-
 import SponsorMatches from '../pages/organizer/SponsorMatches';
 
 const AuthenticatedLanding = () => (
@@ -31,7 +31,7 @@ const AppRoutes = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify-otp" element={<VerifyOTP />} />
-          
+
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<AuthenticatedLanding />} />
           </Route>
@@ -39,6 +39,7 @@ const AppRoutes = () => {
           <Route element={<ProtectedRoute allowedRoles={['organizer']} />}>
             <Route path="/organizer/events" element={<MyEvents />} />
             <Route path="/organizer/events/new" element={<EventBuilder />} />
+            <Route path="/organizer/events/:id" element={<EventDetails />} />
             <Route path="/organizer/tier-packages" element={<TierPackageCreator />} />
             <Route path="/organizer/events/:eventId/matches" element={<SponsorMatches />} />
           </Route>
