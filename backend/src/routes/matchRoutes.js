@@ -1,3 +1,4 @@
+// Rafi
 const express = require('express');
 const router = express.Router();
 const { authenticate } = require('../middleware/auth');
@@ -10,3 +11,4 @@ router.get('/events', authenticate, matchController.discoverEvents);
 router.get('/sponsors/:eventId', authenticate, matchController.discoverSponsors);
 
 module.exports = router;
+// Rafi end
