@@ -27,8 +27,12 @@ const SponsorMatchCard = ({ matchData }) => {
             <span className="capitalize">{sponsor.budgetTier || 'Starter'} Tier</span>
           </div>
           <div className="flex items-center">
-            <ShieldCheck className="w-4 h-4 mr-2 opacity-70" />
-            <span>Verified Partner</span>
+            <ShieldCheck className={`w-4 h-4 mr-2 ${sponsor.isVerified ? 'text-green-500' : 'opacity-40'}`} />
+            {sponsor.isVerified ? (
+              <span className="text-green-600 font-medium">Verified Partner</span>
+            ) : (
+              <span className="text-slate-400">Unverified</span>
+            )}
           </div>
           <div className="flex items-center">
             <Star className="w-4 h-4 mr-2 opacity-70 text-yellow-500" />

@@ -72,24 +72,51 @@ class MatchService {
       let score = 15; // Base Alignment Score
       const reasons = [];
 
-      // 1. Budget Tier Matching (covers all enum values)
+      // 1. Budget Tier Matching — gradient scoring (no binary hit/miss)
       const enterpriseTiers = ['enterprise', 'pro'];
       const largeTiers     = ['large', 'growth'];
-      const mediumTiers    = ['medium', 'starter'];
-      const smallTiers     = ['small'];
+      const mediumTiers    = ['medium'];
+      const smallTiers     = ['small', 'starter']; // 'starter' = smallest budget, not mid-range
 
-      if (enterpriseTiers.includes(sponsor.budgetTier) && event.expectedCrowdSize > 500) {
-        score += 30;
-        reasons.push(`large-scale event (${event.expectedCrowdSize} attendees)`);
-      } else if (largeTiers.includes(sponsor.budgetTier) && event.expectedCrowdSize > 200) {
-        score += 20;
-        reasons.push(`mid-to-large event (${event.expectedCrowdSize} attendees)`);
-      } else if (mediumTiers.includes(sponsor.budgetTier) && event.expectedCrowdSize > 100) {
-        score += 15;
-        reasons.push(`growing event (${event.expectedCrowdSize} attendees)`);
-      } else if (smallTiers.includes(sponsor.budgetTier) && event.expectedCrowdSize <= 200) {
-        score += 10;
-        reasons.push(`community-scale event (${event.expectedCrowdSize} attendees)`);
+      if (enterpriseTiers.includes(sponsor.budgetTier)) {
+        if (event.expectedCrowdSize > 500) {
+          score += 30;
+          reasons.push(`perfect fit: large-scale event (${event.expectedCrowdSize} attendees)`);
+        } else if (event.expectedCrowdSize > 200) {
+          score += 20;
+          reasons.push(`good fit: mid-to-large event (${event.expectedCrowdSize} attendees)`);
+        } else {
+          score += 10;
+          reasons.push(`partial fit: event scale (${event.expectedCrowdSize} attendees)`);
+        }
+      } else if (largeTiers.includes(sponsor.budgetTier)) {
+        if (event.expectedCrowdSize > 200) {
+          score += 20;
+          reasons.push(`strong fit: mid-to-large event (${event.expectedCrowdSize} attendees)`);
+        } else if (event.expectedCrowdSize > 100) {
+          score += 15;
+          reasons.push(`good fit: growing event (${event.expectedCrowdSize} attendees)`);
+        } else {
+          score += 5;
+          reasons.push(`partial fit: event scale (${event.expectedCrowdSize} attendees)`);
+        }
+      } else if (mediumTiers.includes(sponsor.budgetTier)) {
+        if (event.expectedCrowdSize > 100) {
+          score += 15;
+          reasons.push(`good fit: growing event (${event.expectedCrowdSize} attendees)`);
+        } else if (event.expectedCrowdSize > 50) {
+          score += 10;
+          reasons.push(`solid fit: community-scale event (${event.expectedCrowdSize} attendees)`);
+        } else {
+          score += 5;
+        }
+      } else if (smallTiers.includes(sponsor.budgetTier)) {
+        if (event.expectedCrowdSize <= 100) {
+          score += 10;
+          reasons.push(`niche event suits budget tier (${event.expectedCrowdSize} attendees)`);
+        } else {
+          score += 3;
+        }
       }
 
       // 2. Credibility Score influence
@@ -104,6 +131,13 @@ class MatchService {
       } else if (event.socialMediaReach > 5000) {
         score += 10;
         reasons.push(`solid social reach (${event.socialMediaReach.toLocaleString()})`);
+      }
+
+      // 4. Date urgency bonus — events happening soon score higher
+      const daysUntilEvent = Math.ceil((new Date(event.date) - new Date()) / (1000 * 60 * 60 * 24));
+      if (daysUntilEvent > 0 && daysUntilEvent <= 30) {
+        score += 10;
+        reasons.push(`upcoming soon (${daysUntilEvent} days away)`);
       }
 
       score = Math.min(score, 100);
@@ -160,24 +194,51 @@ class MatchService {
       let score = 15; // Base Alignment Score
       const reasons = [];
 
-      // 1. Budget Tier Matching (covers all enum values)
+      // 1. Budget Tier Matching — gradient scoring (no binary hit/miss)
       const enterpriseTiers = ['enterprise', 'pro'];
       const largeTiers     = ['large', 'growth'];
-      const mediumTiers    = ['medium', 'starter'];
-      const smallTiers     = ['small'];
+      const mediumTiers    = ['medium'];
+      const smallTiers     = ['small', 'starter']; // 'starter' = smallest budget, not mid-range
 
-      if (event.expectedCrowdSize > 500 && enterpriseTiers.includes(sponsor.budgetTier)) {
-        score += 30;
-        reasons.push(`enterprise-level budget matches large event scale`);
-      } else if (event.expectedCrowdSize > 200 && largeTiers.includes(sponsor.budgetTier)) {
-        score += 20;
-        reasons.push(`budget tier aligns with event size (${event.expectedCrowdSize} attendees)`);
-      } else if (event.expectedCrowdSize > 100 && mediumTiers.includes(sponsor.budgetTier)) {
-        score += 15;
-        reasons.push(`mid-range budget fits growing event`);
-      } else if (event.expectedCrowdSize <= 200 && smallTiers.includes(sponsor.budgetTier)) {
-        score += 10;
-        reasons.push(`small budget fits community event`);
+      if (enterpriseTiers.includes(sponsor.budgetTier)) {
+        if (event.expectedCrowdSize > 500) {
+          score += 30;
+          reasons.push(`enterprise-level budget perfectly matches large event scale`);
+        } else if (event.expectedCrowdSize > 200) {
+          score += 20;
+          reasons.push(`enterprise budget aligns well with event size (${event.expectedCrowdSize} attendees)`);
+        } else {
+          score += 10;
+          reasons.push(`enterprise sponsor — partial scale fit (${event.expectedCrowdSize} attendees)`);
+        }
+      } else if (largeTiers.includes(sponsor.budgetTier)) {
+        if (event.expectedCrowdSize > 200) {
+          score += 20;
+          reasons.push(`large budget tier matches event scale (${event.expectedCrowdSize} attendees)`);
+        } else if (event.expectedCrowdSize > 100) {
+          score += 15;
+          reasons.push(`budget tier aligns with growing event (${event.expectedCrowdSize} attendees)`);
+        } else {
+          score += 5;
+          reasons.push(`partial fit: event scale (${event.expectedCrowdSize} attendees)`);
+        }
+      } else if (mediumTiers.includes(sponsor.budgetTier)) {
+        if (event.expectedCrowdSize > 100) {
+          score += 15;
+          reasons.push(`mid-range budget fits growing event (${event.expectedCrowdSize} attendees)`);
+        } else if (event.expectedCrowdSize > 50) {
+          score += 10;
+          reasons.push(`mid-range budget fits community event (${event.expectedCrowdSize} attendees)`);
+        } else {
+          score += 5;
+        }
+      } else if (smallTiers.includes(sponsor.budgetTier)) {
+        if (event.expectedCrowdSize <= 100) {
+          score += 10;
+          reasons.push(`small budget suits niche event scale (${event.expectedCrowdSize} attendees)`);
+        } else {
+          score += 3;
+        }
       }
 
       // 2. Credibility Score influence
@@ -204,6 +265,7 @@ class MatchService {
           industry: sponsor.industry,
           budgetTier: sponsor.budgetTier,
           credibilityScore: sponsor.credibilityScore,
+          isVerified: sponsor.isVerified,
         },
         matchScore: score,
         matchReason: reasons.length > 0
