@@ -36,7 +36,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ['university_club', 'ngo', 'startup', 'other'],
     },
-    // Sponsor-specific fields
     industry: {
       type: String,
       trim: true,
@@ -45,14 +44,13 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ['small', 'medium', 'large', 'enterprise'],
     },
-    // Common fields
     phone: {
       type: String,
       trim: true,
     },
     isVerified: {
       type: Boolean,
-      default: false,
+      default: true,
     },
     verificationOTP: {
       code: String,

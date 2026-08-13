@@ -8,22 +8,14 @@ const mongoose = require('mongoose');
 const authRoutes = require('./routes/auth.routes');
 const eventRoutes = require('./routes/event.routes');
 const tierRoutes = require('./routes/tier.routes');
+const proposalRoutes = require('./routes/proposalRoutes');
 
 const app = express();
 
 // Middleware
-const allowedOrigins = [
-  process.env.FRONTEND_URL ? process.env.FRONTEND_URL.replace(/\/$/, '') : 'http://localhost:5173',
-  'http://localhost:5173',
-  'http://127.0.0.1:5173'
-];
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin.replace(/\/$/, ''))) {
-      callback(null, true);
-    } else {
-      callback(null, true);
-    }
+    callback(null, origin || true);
   },
   credentials: true,
 }));
@@ -44,6 +36,7 @@ mongoose
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/tiers', tierRoutes);
+app.use('/api/proposals', proposalRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

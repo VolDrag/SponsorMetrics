@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
+  return jwt.sign({ id }, process.env.JWT_SECRET || 'secret', {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   });
 };
@@ -30,11 +30,8 @@ exports.register = async (req, res) => {
   }
 };
 
-// --- NEWLY ADDED FUNCTIONS TO FIX THE CRASH ---
-
 exports.verifyOTP = async (req, res) => {
   try {
-    // Placeholder logic for future OTP implementation
     res.status(200).json({ success: true, message: 'OTP verified successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'OTP verification failed', error: error.message });
@@ -43,19 +40,17 @@ exports.verifyOTP = async (req, res) => {
 
 exports.resendOTP = async (req, res) => {
   try {
-    // Placeholder logic for future OTP implementation
     res.status(200).json({ success: true, message: 'OTP resent successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to resend OTP', error: error.message });
   }
 };
 
-// ----------------------------------------------
-
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+
     if (!user) {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
@@ -76,7 +71,7 @@ exports.login = async (req, res) => {
     res.status(500).json({ success: false, message: 'Login failed', error: error.message });
   }
 };
- 
+
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);

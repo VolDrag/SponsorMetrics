@@ -7,6 +7,7 @@ import {
   FileText,
   Settings,
   Search,
+  Sparkles,
 } from 'lucide-react';
 
 const navItems = [
@@ -15,6 +16,7 @@ const navItems = [
   { to: '/organizer/campaigns', label: 'Campaigns', icon: Megaphone },
   { to: '/organizer/analytics', label: 'Analytics', icon: BarChart3 },
   { to: '/organizer/events', label: 'Proposals', icon: FileText },
+  { to: '/organizer/proposal-analyzer', label: 'Proposal Analyzer', icon: Sparkles },
   { to: '/organizer/settings', label: 'Settings', icon: Settings },
 ];
 
