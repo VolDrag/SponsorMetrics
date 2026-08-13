@@ -1,19 +1,18 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Store, 
-  Megaphone, 
-  BarChart2, 
-  FileText, 
-  Settings, 
-  HelpCircle, 
+import {
+  LayoutDashboard,
+  Store,
+  Megaphone,
+  BarChart2,
+  FileText,
+  Settings,
+  HelpCircle,
   LogOut,
   Bell,
   MessageSquare,
   LayoutGrid,
-  Search,
-  Plus
+  Search
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -26,14 +25,25 @@ const Sidebar = () => {
     navigate('/login');
   };
 
-  const navItems = [
-    { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+  const sponsorNavItems = [
+    { name: 'Discovery', icon: Search, path: '/sponsor/discovery' },
     { name: 'Marketplace', icon: Store, path: '/marketplace' },
     { name: 'Campaigns', icon: Megaphone, path: '/campaigns' },
     { name: 'Analytics', icon: BarChart2, path: '/analytics' },
     { name: 'Proposals', icon: FileText, path: '/proposals' },
     { name: 'Settings', icon: Settings, path: '/settings' },
   ];
+
+  const organizerNavItems = [
+    { name: 'Event Hub', icon: LayoutDashboard, path: '/organizer/events' },
+    { name: 'Marketplace', icon: Store, path: '/marketplace' },
+    { name: 'Campaigns', icon: Megaphone, path: '/campaigns' },
+    { name: 'Analytics', icon: BarChart2, path: '/analytics' },
+    { name: 'Proposals', icon: FileText, path: '/proposals' },
+    { name: 'Settings', icon: Settings, path: '/settings' },
+  ];
+
+  const navItems = user?.role === 'sponsor' ? sponsorNavItems : organizerNavItems;
 
   return (
     <div className="w-64 bg-[#1E2337] min-h-screen text-slate-300 flex flex-col fixed left-0 top-0 border-r-4 border-blue-500">
@@ -43,7 +53,7 @@ const Sidebar = () => {
           <span className="text-xs font-normal text-slate-400 mt-1">Enterprise Console</span>
         </h1>
       </div>
-      
+
       <nav className="flex-1 mt-6">
         <ul>
           {navItems.map((item) => (
@@ -51,10 +61,9 @@ const Sidebar = () => {
               <NavLink
                 to={item.path}
                 className={({ isActive }) =>
-                  `flex items-center px-6 py-3 text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-[#2A3047] text-white border-l-4 border-orange-400'
-                      : 'hover:bg-[#2A3047] hover:text-white border-l-4 border-transparent'
+                  `flex items-center mx-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${isActive
+                    ? 'bg-amber-500/20 text-amber-400'
+                    : 'hover:bg-[#2A3047] hover:text-white text-slate-300'
                   }`
                 }
               >
@@ -65,22 +74,12 @@ const Sidebar = () => {
           ))}
         </ul>
       </nav>
-
-      {user?.role === 'sponsor' && (
-        <div className="p-6">
-          <button className="w-full bg-[#F5A623] hover:bg-orange-500 text-slate-900 font-bold py-3 px-4 rounded flex items-center justify-center transition-colors">
-            <Plus className="w-5 h-5 mr-2" />
-            New Campaign
-          </button>
-        </div>
-      )}
-
       <div className="px-6 pb-6 pt-2 space-y-4">
         <button className="flex items-center text-sm font-medium hover:text-white transition-colors">
           <HelpCircle className="w-5 h-5 mr-3 opacity-75" />
           Help Center
         </button>
-        <button 
+        <button
           onClick={handleLogout}
           className="flex items-center text-sm font-medium hover:text-white transition-colors"
         >
@@ -100,9 +99,9 @@ const Topbar = () => {
     <div className="h-16 bg-white border-b flex items-center justify-between px-6 sticky top-0 z-10 ml-64">
       <div className="flex-1 max-w-xl relative">
         <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-        <input 
-          type="text" 
-          placeholder="Search deals, contracts, or partners..." 
+        <input
+          type="text"
+          placeholder="Search deals, contracts, or partners..."
           className="w-full pl-9 pr-4 py-2 bg-slate-100 border-none rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#F5A623]"
         />
       </div>

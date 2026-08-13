@@ -6,52 +6,118 @@ import ProtectedRoute from '../components/common/ProtectedRoute';
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
 import VerifyOTP from '../pages/auth/VerifyOTP';
-import TierPackageCreator from '../pages/organizer/TierPackageCreator';
+
+// Feature 1 (Debashish): Event Profile & Proposal Builder
 import MyEvents from '../pages/organizer/MyEvents';
 import EventBuilder from '../pages/organizer/EventBuilder';
 import EventDetails from '../pages/organizer/EventDetails';
 
+// Feature 2 (Ifty): Sponsorship Tier Package Creator
+import TierPackageCreator from '../pages/organizer/TierPackageCreator';
+
+// Feature 3 (Your Feature): Proposal Strength Analyzer
+import ProposalStrengthAnalyzer from '../pages/organizer/ProposalStrengthAnalyzer';
+
+// Feature 4 (Rafi): Discovery & Matching
 import Discovery from '../pages/sponsor/Discovery';
 import SponsorMatches from '../pages/organizer/SponsorMatches';
 
-const AuthenticatedLanding = () => (
-  <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-    <div className="rounded-xl bg-white p-8 text-center shadow">
-      <h1 className="text-2xl font-bold text-slate-900">Authenticated</h1>
-      <p className="mt-2 text-slate-600">Your authentication foundation is active.</p>
-    </div>
-  </div>
-);
-
 const AppRoutes = () => {
   return (
-    <BrowserRouter>
-      <AuthProvider>
+    <AuthProvider>
+      <BrowserRouter>
         <Routes>
+          {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify-otp" element={<VerifyOTP />} />
 
-          <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<AuthenticatedLanding />} />
-          </Route>
+          {/* Feature 1 Routes (Debashish) */}
+          <Route
+            path="/organizer/events"
+            element={
+              <ProtectedRoute allowedRoles={['organizer']}>
+                <MyEvents />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizer/events/new"
+            element={
+              <ProtectedRoute allowedRoles={['organizer']}>
+                <EventBuilder />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizer/events/:id"
+            element={
+              <ProtectedRoute allowedRoles={['organizer']}>
+                <EventDetails />
+              </ProtectedRoute>
+            }
+          />
 
-          <Route element={<ProtectedRoute allowedRoles={['organizer']} />}>
-            <Route path="/organizer/events" element={<MyEvents />} />
-            <Route path="/organizer/events/new" element={<EventBuilder />} />
-            <Route path="/organizer/events/:id" element={<EventDetails />} />
-            <Route path="/organizer/tier-packages" element={<TierPackageCreator />} />
-            <Route path="/organizer/events/:eventId/matches" element={<SponsorMatches />} />
-          </Route>
+          {/* Feature 2 Routes (Ifty) */}
+          <Route
+            path="/organizer/events/:eventId/tiers"
+            element={
+              <ProtectedRoute allowedRoles={['organizer']}>
+                <TierPackageCreator />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizer/tiers"
+            element={
+              <ProtectedRoute allowedRoles={['organizer']}>
+                <TierPackageCreator />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizer/tier-packages"
+            element={
+              <ProtectedRoute allowedRoles={['organizer']}>
+                <TierPackageCreator />
+              </ProtectedRoute>
+            }
+          />
 
-          <Route element={<ProtectedRoute allowedRoles={['sponsor']} />}>
-            <Route path="/sponsor/discovery" element={<Discovery />} />
-          </Route>
+          {/* Feature 3 Route (Your Feature: Proposal Strength Analyzer) */}
+          <Route
+            path="/organizer/proposal-analyzer"
+            element={
+              <ProtectedRoute allowedRoles={['organizer']}>
+                <ProposalStrengthAnalyzer />
+              </ProtectedRoute>
+            }
+          />
 
+          {/* Feature 4 Routes (Rafi): Discovery & Matching */}
+          <Route
+            path="/sponsor/discovery"
+            element={
+              <ProtectedRoute allowedRoles={['sponsor']}>
+                <Discovery />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizer/events/:eventId/matches"
+            element={
+              <ProtectedRoute allowedRoles={['organizer']}>
+                <SponsorMatches />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Default Redirect */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
-      </AuthProvider>
-    </BrowserRouter>
+      </BrowserRouter>
+    </AuthProvider>
   );
 };
 

@@ -14,14 +14,29 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     const token = localStorage.getItem('token');
+    const savedUser = localStorage.getItem('user');
+
     if (!token) {
       setLoading(false);
       return;
     }
 
+    // Restore session from localStorage instantly — no network call needed
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+        setLoading(false);
+        return;
+      } catch {
+        // Corrupted data, fall through to network check
+      }
+    }
+
+    // Fallback: verify token via network if user data is missing
     try {
       const res = await authApi.getMe();
       setUser(res.data.data);
+      localStorage.setItem('user', JSON.stringify(res.data.data));
     } catch (error) {
       console.error('Auth check failed:', error);
       logout();

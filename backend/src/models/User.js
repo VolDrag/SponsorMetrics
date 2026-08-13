@@ -36,7 +36,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ['university_club', 'ngo', 'startup', 'other'],
     },
-    // Sponsor-specific fields
     industry: {
       type: String,
       trim: true,
@@ -51,14 +50,13 @@ const userSchema = new mongoose.Schema(
       min: 0,
       max: 5,
     },
-    // Common fields
     phone: {
       type: String,
       trim: true,
     },
     isVerified: {
       type: Boolean,
-      default: false,
+      default: true,
     },
     verificationOTP: {
       code: String,
@@ -73,13 +71,14 @@ const userSchema = new mongoose.Schema(
       default: true,
     },
   },
-  { timestamps: true, collection: 'users' }
+  { timestamps: true }
 );
 
 // Hash password before saving
-userSchema.pre('save', async function () {
-  if (!this.isModified('password')) return;
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 12);
+  next();
 });
 
 // Compare password method

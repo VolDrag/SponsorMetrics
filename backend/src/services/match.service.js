@@ -120,7 +120,7 @@ class MatchService {
       }
 
       // 2. Credibility Score influence
-      const credPoints = Math.round(sponsor.credibilityScore * 3);
+      const credPoints = Math.round((sponsor.credibilityScore || 0) * 3); // module 2, feature 1 (Rafi) — fix: guard against undefined credibilityScore
       score += credPoints;
       if (credPoints > 0) reasons.push(`sponsor credibility score (${sponsor.credibilityScore}/5)`);
 
@@ -242,7 +242,7 @@ class MatchService {
       }
 
       // 2. Credibility Score influence
-      const credPoints = Math.round(sponsor.credibilityScore * 3);
+      const credPoints = Math.round((sponsor.credibilityScore || 0) * 3); // module 2, feature 1 (Rafi) — fix: guard against undefined credibilityScore
       score += credPoints;
       if (credPoints > 0) reasons.push(`credibility score ${sponsor.credibilityScore}/5`);
 

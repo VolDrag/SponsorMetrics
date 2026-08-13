@@ -1,46 +1,95 @@
-const { body, param } = require('express-validator');
+const { body } = require('express-validator');
 
 exports.registerValidation = [
-  body('name').trim().notEmpty().withMessage('Name is required'),
-  body('email').trim().notEmpty().isEmail().withMessage('Valid email required'),
-  body('password').trim().notEmpty().isLength({ min: 6 }).withMessage('Password min 6 chars'),
-  body('role').notEmpty().isIn(['organizer', 'sponsor']).withMessage('Role must be organizer or sponsor'),
+  body('name')
+    .trim()
+    .notEmpty()
+    .withMessage('Name is required')
+    .isLength({ max: 100 })
+    .withMessage('Name cannot exceed 100 characters'),
+
+  body('email')
+    .trim()
+    .notEmpty()
+    .withMessage('Email is required')
+    .isEmail()
+    .withMessage('Please provide a valid email')
+    .normalizeEmail(),
+
+  body('password')
+    .trim()
+    .notEmpty()
+    .withMessage('Password is required')
+    .isLength({ min: 6 })
+    .withMessage('Password must be at least 6 characters'),
+
+  body('role')
+    .notEmpty()
+    .withMessage('Role is required')
+    .isIn(['organizer', 'sponsor'])
+    .withMessage('Role must be organizer or sponsor'),
+
+  body('organizationName')
+    .optional()
+    .trim()
+    .isLength({ max: 200 }),
+
+  body('organizationType')
+    .optional()
+    .isIn(['university_club', 'ngo', 'startup', 'other']),
+
+  body('industry')
+    .optional()
+    .trim(),
+
+  body('budgetTier')
+    .optional()
+    .isIn(['small', 'medium', 'large', 'enterprise']),
+
+  body('phone')
+    .optional()
+    .trim()
+    .matches(/^[0-9+\-\s()]+$/)
+    .withMessage('Invalid phone number format'),
 ];
 
 exports.loginValidation = [
-  body('email').trim().notEmpty().isEmail().withMessage('Valid email required'),
-  body('password').trim().notEmpty().withMessage('Password is required'),
+  body('email')
+    .trim()
+    .notEmpty()
+    .withMessage('Email is required')
+    .isEmail()
+    .withMessage('Please provide a valid email'),
+
+  body('password')
+    .trim()
+    .notEmpty()
+    .withMessage('Password is required'),
 ];
 
 exports.verifyOTPValidation = [
-  body('email').trim().notEmpty().isEmail(),
-  body('otp').trim().notEmpty().isLength({ min: 6, max: 6 }).isNumeric(),
+  body('email')
+    .trim()
+    .notEmpty()
+    .withMessage('Email is required')
+    .isEmail()
+    .withMessage('Please provide a valid email'),
+
+  body('otp')
+    .trim()
+    .notEmpty()
+    .withMessage('OTP is required')
+    .isLength({ min: 6, max: 6 })
+    .withMessage('OTP must be 6 digits')
+    .isNumeric()
+    .withMessage('OTP must contain only numbers'),
 ];
 
 exports.resendOTPValidation = [
-  body('email').trim().notEmpty().isEmail(),
-];
-
-exports.createEventValidation = [
-  body('name').trim().notEmpty(),
-  body('expectedCrowdSize').notEmpty().isInt({ min: 1 }),
-  body('venue').trim().notEmpty(),
-  body('location.lat').notEmpty().isFloat({ min: -90, max: 90 }),
-  body('location.lng').notEmpty().isFloat({ min: -180, max: 180 }),
-  body('date').notEmpty().isISO8601(),
-];
-
-exports.updateEventValidation = [
-  param('eventId').isMongoId(),
-  body('name').optional().trim(),
-  body('expectedCrowdSize').optional().isInt({ min: 1 }),
-  body('venue').optional().trim(),
-  body('location.lat').optional().isFloat({ min: -90, max: 90 }),
-  body('location.lng').optional().isFloat({ min: -180, max: 180 }),
-  body('date').optional().isISO8601(),
-  body('status').optional().isIn(['draft', 'published', 'completed']),
-];
-
-exports.eventIdValidation = [
-  param('eventId').isMongoId(),
+  body('email')
+    .trim()
+    .notEmpty()
+    .withMessage('Email is required')
+    .isEmail()
+    .withMessage('Please provide a valid email'),
 ];

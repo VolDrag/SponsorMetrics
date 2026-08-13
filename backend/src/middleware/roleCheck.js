@@ -1,4 +1,4 @@
-exports.requireRole = (...allowedRoles) => {
+const roleCheck = (...allowedRoles) => {
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({
@@ -16,4 +16,8 @@ exports.requireRole = (...allowedRoles) => {
 
     next();
   };
-}; 
+};
+
+module.exports = roleCheck;
+module.exports.roleCheck = roleCheck;
+module.exports.requireRole = roleCheck;

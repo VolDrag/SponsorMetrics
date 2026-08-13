@@ -1,16 +1,18 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-exports.authenticate = async (req, res, next) => {
+const authenticate = async (req, res, next) => {
   try {
     let token;
 
-    // Check Authorization header
+    // Check Authorization header or cookies
     if (
       req.headers.authorization &&
       req.headers.authorization.startsWith('Bearer')
     ) {
       token = req.headers.authorization.split(' ')[1];
+    } else if (req.cookies && req.cookies.token) {
+      token = req.cookies.token;
     }
 
     if (!token) {
@@ -21,8 +23,10 @@ exports.authenticate = async (req, res, next) => {
     }
 
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select('-password');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+
+    // Check if user still exists
+    const user = await User.findById(decoded.id);
 
     if (!user) {
       return res.status(401).json({
@@ -31,7 +35,7 @@ exports.authenticate = async (req, res, next) => {
       });
     }
 
-    if (!user.isActive) {
+    if (user.isActive === false) {
       return res.status(401).json({
         success: false,
         message: 'User account is deactivated',
@@ -46,4 +50,7 @@ exports.authenticate = async (req, res, next) => {
       message: 'Not authorized. Invalid token.',
     });
   }
-}; 
+};
+
+module.exports = authenticate;
+module.exports.authenticate = authenticate;
