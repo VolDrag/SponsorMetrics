@@ -23,8 +23,16 @@ import Discovery from '../pages/sponsor/Discovery';
 import SponsorMatches from '../pages/organizer/SponsorMatches';
 
 // Module 2
+// Feature 1: Proposal Creator
+import ProposalCreator from '../pages/organizer/ProposalCreator';
+import MyProposals from '../pages/organizer/MyProposals';
+// Feature 2: Proposal Review & In-Platform Negotiation
+import ProposalInbox from '../pages/sponsor/ProposalInbox';
+import SponsorProposalReview, { OrganizerProposalReview } from '../pages/sponsor/ProposalReview';
 // Feature 3: Sponsor Portfolio Handler
 import Portfolio from '../pages/sponsor/Portfolio';
+// Feature 4: Proposal Status Tracker
+import ProposalStatusTracker from '../pages/organizer/ProposalStatusTracker';
 
 const AppRoutes = () => {
   return (
@@ -116,7 +124,61 @@ const AppRoutes = () => {
             }
           />
 
-          
+          {/* ========== MODULE 2 | Feature 1: Proposal Creator — START ========== */}
+          <Route
+            path="/organizer/proposals"
+            element={
+              <ProtectedRoute allowedRoles={['organizer']}>
+                <MyProposals />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizer/proposals/new"
+            element={
+              <ProtectedRoute allowedRoles={['organizer']}>
+                <ProposalCreator />
+              </ProtectedRoute>
+            }
+          />
+          {/* ========== MODULE 2 | Feature 1: Proposal Creator — END ========== */}
+          {/* MODULE 2 | Feature 2: organizer view of a sent proposal (accept / counter) */}
+          <Route
+            path="/organizer/proposals/:proposalId"
+            element={
+              <ProtectedRoute allowedRoles={['organizer']}>
+                <OrganizerProposalReview />
+              </ProtectedRoute>
+            }
+          />
+          {/* MODULE 2 | Feature 4: Proposal Status Tracker */}
+          <Route
+            path="/organizer/proposal-tracker"
+            element={
+              <ProtectedRoute allowedRoles={['organizer']}>
+                <ProposalStatusTracker />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ========== MODULE 2 | Feature 2: Proposal Review & In-Platform Negotiation — START ========== */}
+          <Route
+            path="/sponsor/proposals"
+            element={
+              <ProtectedRoute allowedRoles={['sponsor']}>
+                <ProposalInbox />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/sponsor/proposals/:proposalId"
+            element={
+              <ProtectedRoute allowedRoles={['sponsor']}>
+                <SponsorProposalReview />
+              </ProtectedRoute>
+            }
+          />
+          {/* ========== MODULE 2 | Feature 2: Proposal Review & In-Platform Negotiation — END ========== */}
           {/* MODULE 2 | Feature 3: Sponsor Portfolio Handler */}
           <Route
             path="/sponsor/portfolio"
