@@ -440,7 +440,16 @@ exports.aiAssist = async (req, res) => {
 };
 // ========== MODULE 2 | Feature 1: Proposal Creator — END ==========
 
-
+// MODULE 2 | Feature 3: derive Active/Upcoming/Completed for the new portfolio campaign
+const campaignStatusFromEventDate = (eventDate) => {
+  if (!eventDate) return 'upcoming';
+  const now = new Date();
+  const date = new Date(eventDate);
+  if (date < now) return 'completed';
+  const weekMs = 7 * 24 * 60 * 60 * 1000;
+  if (date - now <= weekMs) return 'active';
+  return 'upcoming';
+};
 
 
 
