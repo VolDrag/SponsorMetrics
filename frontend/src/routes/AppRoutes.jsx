@@ -22,6 +22,10 @@ import ProposalStrengthAnalyzer from '../pages/organizer/ProposalStrengthAnalyze
 import Discovery from '../pages/sponsor/Discovery';
 import SponsorMatches from '../pages/organizer/SponsorMatches';
 
+// Module 2
+// Feature 3: Sponsor Portfolio Handler
+import Portfolio from '../pages/sponsor/Portfolio';
+
 const AppRoutes = () => {
   return (
     <AuthProvider>
@@ -108,6 +112,17 @@ const AppRoutes = () => {
             element={
               <ProtectedRoute allowedRoles={['organizer']}>
                 <SponsorMatches />
+              </ProtectedRoute>
+            }
+          />
+
+          
+          {/* MODULE 2 | Feature 3: Sponsor Portfolio Handler */}
+          <Route
+            path="/sponsor/portfolio"
+            element={
+              <ProtectedRoute allowedRoles={['sponsor']}>
+                <Portfolio />
               </ProtectedRoute>
             }
           />
