@@ -439,3 +439,50 @@ exports.aiAssist = async (req, res) => {
   }
 };
 // ========== MODULE 2 | Feature 1: Proposal Creator — END ==========
+
+
+
+
+
+// ========== MODULE 2 | Feature 2: Proposal Review & In-Platform Negotiation — END ==========
+
+// ========== MODULE 2 | Feature 4: Proposal Status Tracker — START ==========
+const PIPELINE_COLUMNS = ['drafted', 'sent', 'viewed', 'negotiation', 'accepted', 'rejected'];
+
+// @desc    Organizer visual pipeline of proposal statuses
+// @route   GET /api/proposals/pipeline
+// @access  Private (Organizer)
+exports.getPipeline = async (req, res) => {
+  try {
+    const proposals = await Proposal.find({ organizerId: req.user._id })
+      .populate(POPULATE)
+      .sort({ updatedAt: -1 });
+
+    const columns = {};
+    const counts = {};
+    PIPELINE_COLUMNS.forEach((status) => {
+      columns[status] = [];
+      counts[status] = 0;
+    });
+
+    proposals.forEach((proposal) => {
+      const status = PIPELINE_COLUMNS.includes(proposal.status) ? proposal.status : 'drafted';
+      columns[status].push(proposal);
+      counts[status] += 1;
+    });
+
+    res.status(200).json({
+      success: true,
+      count: proposals.length,
+      data: { columns, counts },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch proposal pipeline',
+      error: error.message,
+    });
+  }
+};
+// ========== MODULE 2 | Feature 4: Proposal Status Tracker — END ==========
+
