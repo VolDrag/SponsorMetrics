@@ -10,6 +10,7 @@ const eventRoutes = require('./routes/event.routes');
 const tierRoutes = require('./routes/tier.routes');
 const proposalRoutes = require('./routes/proposalRoutes');
 const matchRoutes = require('./routes/matchRoutes');
+const campaignRoutes = require('./routes/campaign.routes'); // MODULE 2 | Feature 3 + Event Editing
 
 const app = express();
 
@@ -23,6 +24,8 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+// MODULE 2 | Feature 3 Event Editing — serve locally uploaded campaign photos
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Database connection
 mongoose
@@ -39,6 +42,7 @@ app.use('/api/events', eventRoutes);
 app.use('/api/tiers', tierRoutes);
 app.use('/api/proposals', proposalRoutes);
 app.use('/api/matches', matchRoutes);
+app.use('/api/campaigns', campaignRoutes); // MODULE 2 | Feature 3 + Event Editing
 
 // Health check
 app.get('/api/health', (req, res) => {
