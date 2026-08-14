@@ -1,7 +1,9 @@
-import React from 'react';
+import React from 'react'; 
+import { Link, useParams } from 'react-router-dom';
 import { Building, ShieldCheck, PieChart, Star } from 'lucide-react';
 
 const SponsorMatchCard = ({ matchData }) => {
+  const { eventId } = useParams();
   const { sponsor, matchScore, matchReason } = matchData;
   
   return (
@@ -46,9 +48,13 @@ const SponsorMatchCard = ({ matchData }) => {
       </div>
       
       <div className="bg-slate-50 px-6 py-4 border-t flex justify-end items-center">
-        <button className="bg-[#1E2337] hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+        {/* MODULE 2 | Feature 1: Proposal Creator — prefill event + sponsor */}
+        <Link
+          to={`/organizer/proposals/new?eventId=${eventId}&sponsorId=${sponsor._id}`}
+          className="bg-[#1E2337] hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+        >
           Pitch Proposal
-        </button>
+        </Link>
       </div>
     </div>
   );
