@@ -27,19 +27,18 @@ const Sidebar = () => {
 
   const sponsorNavItems = [
     { name: 'Discovery', icon: Search, path: '/sponsor/discovery' },
-    { name: 'Marketplace', icon: Store, path: '/marketplace' },
-    { name: 'Campaigns', icon: Megaphone, path: '/campaigns' },
+    { name: 'Proposals', icon: FileText, path: '/sponsor/proposals' }, // MODULE 2 | Feature 2
+    { name: 'Portfolio', icon: Megaphone, path: '/sponsor/portfolio' }, // MODULE 2 | Feature 3
     { name: 'Analytics', icon: BarChart2, path: '/analytics' },
-    { name: 'Proposals', icon: FileText, path: '/proposals' },
     { name: 'Settings', icon: Settings, path: '/settings' },
   ];
 
   const organizerNavItems = [
     { name: 'Event Hub', icon: LayoutDashboard, path: '/organizer/events' },
+    { name: 'Proposals', icon: FileText, path: '/organizer/proposals' }, // MODULE 2 | Feature 1
+    { name: 'Status Tracker', icon: LayoutGrid, path: '/organizer/proposal-tracker' }, // MODULE 2 | Feature 4
     { name: 'Marketplace', icon: Store, path: '/marketplace' },
-    { name: 'Campaigns', icon: Megaphone, path: '/campaigns' },
     { name: 'Analytics', icon: BarChart2, path: '/analytics' },
-    { name: 'Proposals', icon: FileText, path: '/proposals' },
     { name: 'Settings', icon: Settings, path: '/settings' },
   ];
 
