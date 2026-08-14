@@ -209,6 +209,12 @@ const MyEvents = () => {
 
                     {event.status === 'draft' && (
                       <>
+                        <Link
+                          to={`/organizer/events/${event._id}/edit`}
+                          className="px-3 py-1.5 text-sm border border-amber-300 text-amber-700 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors font-medium"
+                        >
+                          ✏️ Edit
+                        </Link>
                         <button
                           onClick={() => handlePublish(event._id)}
                           className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
@@ -239,6 +245,14 @@ const MyEvents = () => {
                         🎯 Top Matches
                       </Link>
                     )}
+
+                    {/* MODULE 2 | Feature 1: Proposal Creator */}
+                    <Link
+                      to={`/organizer/proposals/new?eventId=${event._id}`}
+                      className="px-3 py-1.5 text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors font-medium"
+                    >
+                      Create Proposal
+                    </Link>
 
                     <Link
                       to="/organizer/proposal-analyzer"
