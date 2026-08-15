@@ -120,4 +120,3 @@ const MyProposals = () => {
 };
 
 export default MyProposals;
-
