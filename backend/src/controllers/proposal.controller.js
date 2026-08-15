@@ -440,6 +440,30 @@ exports.aiAssist = async (req, res) => {
 };
 // ========== MODULE 2 | Feature 1: Proposal Creator — END ==========
 
+// ========== MODULE 2 | Feature 2: Proposal Review & In-Platform Negotiation — START ==========
+const NEGOTIABLE_STATUSES = ['sent', 'viewed', 'negotiation'];
+
+const findAccessibleProposal = async (proposalId, user) => {
+  const proposal = await Proposal.findById(proposalId);
+  if (!proposal) return { error: { statusCode: 404, message: 'Proposal not found' } };
+
+  const userId = user._id.toString();
+  const isOwner = proposal.organizerId && proposal.organizerId.toString() === userId;
+  const isAssignedSponsor = proposal.sponsorId && proposal.sponsorId.toString() === userId;
+  const isAdmin = user.role === 'admin';
+
+  if (!isOwner && !isAssignedSponsor && !isAdmin) {
+    return { error: { statusCode: 403, message: 'You do not have permission to access this proposal' } };
+  }
+
+  return { proposal, isOwner, isAssignedSponsor };
+};
+
+const latestPendingCounter = (proposal) => {
+  const pending = (proposal.counterOffers || []).filter((offer) => offer.status === 'pending');
+  return pending.length ? pending[pending.length - 1] : null;
+};
+
 // MODULE 2 | Feature 3: derive Active/Upcoming/Completed for the new portfolio campaign
 const campaignStatusFromEventDate = (eventDate) => {
   if (!eventDate) return 'upcoming';
@@ -451,8 +475,260 @@ const campaignStatusFromEventDate = (eventDate) => {
   return 'upcoming';
 };
 
+// MODULE 2 | Feature 2 + Feature 3: persist accepted deal and create a portfolio campaign
+const finalizeAcceptedDeal = async (proposal) => {
+  const existingDeal = await Deal.findOne({
+    eventId: proposal.eventId,
+    organizerId: proposal.organizerId,
+    sponsorId: proposal.sponsorId,
+    status: 'accepted',
+  });
 
+  const mappedCounters = (proposal.counterOffers || []).map((offer) => ({
+    offeredBy: offer.offeredBy,
+    proposedBudget: offer.proposedBudget,
+    proposedChanges: [offer.swapFrom, offer.swapTo].filter(Boolean).join(' → '),
+    message: offer.message,
+    createdAt: offer.createdAt,
+  }));
 
+  const deal = existingDeal
+    ? existingDeal
+    : await Deal.create({
+        eventId: proposal.eventId,
+        organizerId: proposal.organizerId,
+        sponsorId: proposal.sponsorId,
+        tierId: proposal.selectedTierId,
+        status: 'accepted',
+        counterOffers: mappedCounters,
+        finalAgreedBudget: proposal.proposedBudget,
+        finalTierId: proposal.selectedTierId,
+        acceptedAt: new Date(),
+      });
+
+  if (existingDeal) {
+    existingDeal.status = 'accepted';
+    existingDeal.finalAgreedBudget = proposal.proposedBudget;
+    existingDeal.acceptedAt = existingDeal.acceptedAt || new Date();
+    await existingDeal.save();
+  }
+
+  const existingCampaign = await Campaign.findOne({ dealId: deal._id });
+  if (existingCampaign) return { deal, campaign: existingCampaign };
+
+  const event = await Event.findById(proposal.eventId);
+  const campaign = await Campaign.create({
+    sponsorId: proposal.sponsorId,
+    eventId: proposal.eventId,
+    dealId: deal._id,
+    spend: proposal.proposedBudget || 0,
+    status: campaignStatusFromEventDate(event?.date),
+    healthIndicator: 'green',
+    goals: proposal.goals
+      ? [{ metric: proposal.goals, targetValue: 1, currentValue: 0 }]
+      : [],
+  });
+
+  return { deal, campaign };
+};
+
+// @desc    Inbox of proposals sent to the logged-in sponsor
+// @route   GET /api/proposals/inbox
+// @access  Private (Sponsor)
+exports.getInbox = async (req, res) => {
+  try {
+    const proposals = await Proposal.find({
+      sponsorId: req.user._id,
+      status: { $ne: 'drafted' },
+    })
+      .populate(POPULATE)
+      .sort({ updatedAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: proposals.length,
+      data: proposals,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch proposal inbox',
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Submit a counter-offer (budget and/or package item swap)
+// @route   POST /api/proposals/:proposalId/counter-offer
+// @access  Private (assigned sponsor or owner organizer)
+exports.counterOffer = async (req, res) => {
+  try {
+    const { proposal, error } = await findAccessibleProposal(req.params.proposalId, req.user);
+    if (error) {
+      return res.status(error.statusCode).json({ success: false, message: error.message });
+    }
+
+    if (!NEGOTIABLE_STATUSES.includes(proposal.status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'This proposal is not open for negotiation',
+      });
+    }
+
+    const { proposedBudget, swapFrom, swapTo, message } = req.body;
+    const hasBudget = proposedBudget !== undefined && proposedBudget !== null && proposedBudget !== '';
+    const hasSwap = Boolean(swapFrom || swapTo);
+
+    if (!hasBudget && !hasSwap && !message) {
+      return res.status(400).json({
+        success: false,
+        message: 'Provide a proposed budget, a package swap, or a message',
+      });
+    }
+
+    if (hasSwap && (!swapFrom || !swapTo)) {
+      return res.status(400).json({
+        success: false,
+        message: 'A swap needs both the item to replace and the item to add',
+      });
+    }
+
+    proposal.counterOffers.push({
+      offeredBy: req.user._id,
+      role: req.user.role === 'organizer' ? 'organizer' : 'sponsor',
+      proposedBudget: hasBudget ? Number(proposedBudget) : proposal.proposedBudget,
+      swapFrom: swapFrom || '',
+      swapTo: swapTo || '',
+      message: message || '',
+      status: 'pending',
+    });
+    proposal.status = 'negotiation';
+    await proposal.save();
+
+    const populated = await Proposal.findById(proposal._id).populate(POPULATE);
+
+    res.status(201).json({
+      success: true,
+      message: 'Counter-offer submitted',
+      data: populated,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to submit counter-offer',
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Accept current terms or the latest pending counter-offer
+// @route   POST /api/proposals/:proposalId/accept
+// @access  Private (assigned sponsor or owner organizer)
+exports.acceptProposal = async (req, res) => {
+  try {
+    const { proposal, isOwner, isAssignedSponsor, error } = await findAccessibleProposal(
+      req.params.proposalId,
+      req.user
+    );
+    if (error) {
+      return res.status(error.statusCode).json({ success: false, message: error.message });
+    }
+
+    if (['accepted', 'rejected', 'drafted'].includes(proposal.status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'This proposal cannot be accepted in its current status',
+      });
+    }
+
+    const pending = latestPendingCounter(proposal);
+    if (pending) {
+      if (pending.offeredBy.toString() === req.user._id.toString()) {
+        return res.status(400).json({
+          success: false,
+          message: 'Wait for the other party to respond to your counter-offer',
+        });
+      }
+      pending.status = 'accepted';
+      if (pending.proposedBudget !== undefined && pending.proposedBudget !== null) {
+        proposal.proposedBudget = pending.proposedBudget;
+      }
+    } else if (!isAssignedSponsor && !isOwner) {
+      return res.status(403).json({
+        success: false,
+        message: 'You cannot accept this proposal',
+      });
+    }
+
+    proposal.status = 'accepted';
+    proposal.respondedAt = new Date();
+    await proposal.save();
+
+    await finalizeAcceptedDeal(proposal);
+
+    const populated = await Proposal.findById(proposal._id).populate(POPULATE);
+
+    res.status(200).json({
+      success: true,
+      message: 'Proposal accepted',
+      data: populated,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to accept proposal',
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Reject the proposal or the latest pending counter-offer
+// @route   POST /api/proposals/:proposalId/reject
+// @access  Private (assigned sponsor or owner organizer)
+exports.rejectProposal = async (req, res) => {
+  try {
+    const { proposal, error } = await findAccessibleProposal(req.params.proposalId, req.user);
+    if (error) {
+      return res.status(error.statusCode).json({ success: false, message: error.message });
+    }
+
+    if (['accepted', 'rejected', 'drafted'].includes(proposal.status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'This proposal cannot be rejected in its current status',
+      });
+    }
+
+    const pending = latestPendingCounter(proposal);
+    if (pending) {
+      if (pending.offeredBy.toString() === req.user._id.toString()) {
+        return res.status(400).json({
+          success: false,
+          message: 'Wait for the other party to respond to your counter-offer',
+        });
+      }
+      pending.status = 'rejected';
+    }
+
+    proposal.status = 'rejected';
+    proposal.respondedAt = new Date();
+    await proposal.save();
+
+    const populated = await Proposal.findById(proposal._id).populate(POPULATE);
+
+    res.status(200).json({
+      success: true,
+      message: 'Proposal rejected',
+      data: populated,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to reject proposal',
+      error: error.message,
+    });
+  }
+};
 // ========== MODULE 2 | Feature 2: Proposal Review & In-Platform Negotiation — END ==========
 
 // ========== MODULE 2 | Feature 4: Proposal Status Tracker — START ==========
@@ -494,4 +770,3 @@ exports.getPipeline = async (req, res) => {
   }
 };
 // ========== MODULE 2 | Feature 4: Proposal Status Tracker — END ==========
-
