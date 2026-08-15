@@ -1,6 +1,48 @@
 const mongoose = require('mongoose');
 
-
+// ========== MODULE 2 | Feature 2: Proposal Review & In-Platform Negotiation — START ==========
+// Each counter-offer is stored as its own subdocument (negotiation history).
+const counterOfferSchema = new mongoose.Schema(
+  {
+    offeredBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    role: {
+      type: String,
+      enum: ['sponsor', 'organizer'],
+      required: true,
+    },
+    proposedBudget: {
+      type: Number,
+      min: 0,
+    },
+    swapFrom: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    swapTo: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    message: {
+      type: String,
+      trim: true,
+      default: '',
+      maxlength: [2000, 'Counter-offer message cannot exceed 2000 characters'],
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'accepted', 'rejected'],
+      default: 'pending',
+    },
+  },
+  { timestamps: true }
+);
+// ========== MODULE 2 | Feature 2: counterOfferSchema — END ==========
 
 const proposalSchema = new mongoose.Schema(
   {
