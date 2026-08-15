@@ -111,3 +111,34 @@ exports.aiAssistValidation = [
   body('goals').optional().trim().isLength({ max: 1000 }),
 ];
 // ========== MODULE 2 | Feature 1: Proposal Creator — END ==========
+
+// ========== MODULE 2 | Feature 2: Proposal Review & In-Platform Negotiation — START ==========
+exports.counterOfferValidation = [
+  param('proposalId')
+    .isMongoId()
+    .withMessage('Invalid proposal ID'),
+
+  body('proposedBudget')
+    .optional({ nullable: true, checkFalsy: true })
+    .isFloat({ min: 0 })
+    .withMessage('Proposed budget must be a non-negative number'),
+
+  body('swapFrom')
+    .optional()
+    .trim()
+    .isLength({ max: 200 })
+    .withMessage('Swap-from item is too long'),
+
+  body('swapTo')
+    .optional()
+    .trim()
+    .isLength({ max: 200 })
+    .withMessage('Swap-to item is too long'),
+
+  body('message')
+    .optional()
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage('Message cannot exceed 2000 characters'),
+];
+// ========== MODULE 2 | Feature 2: Proposal Review & In-Platform Negotiation — END ==========
