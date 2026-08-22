@@ -41,7 +41,7 @@ class MatchService {
     }
 
     // Fetch matching events
-    let events = await Event.find(query).populate('organizerId', 'name organizationName');
+    let events = await Event.find(query).populate('organizerId', 'name organizationName avgReliability avgCommunication reviewCount credibilityScore');
 
     // 3. Budget Filter (Post-Query)
     if (budgetFilter && budgetFilter !== 'any') {
@@ -265,6 +265,9 @@ class MatchService {
           industry: sponsor.industry,
           budgetTier: sponsor.budgetTier,
           credibilityScore: sponsor.credibilityScore,
+          avgReliability: sponsor.avgReliability,
+          avgCommunication: sponsor.avgCommunication,
+          reviewCount: sponsor.reviewCount,
           isVerified: sponsor.isVerified,
         },
         matchScore: score,

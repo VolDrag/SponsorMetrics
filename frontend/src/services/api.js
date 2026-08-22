@@ -15,6 +15,14 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // MODULE 2 | Feature 3 Event Editing — let the browser set multipart boundary for photo uploads
+    if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+      if (config.headers && typeof config.headers.delete === 'function') {
+        config.headers.delete('Content-Type');
+      } else {
+        delete config.headers['Content-Type'];
+      }
+    }
     return config;
   },
   (error) => Promise.reject(error)

@@ -16,6 +16,7 @@ const notificationSchema = new mongoose.Schema(
         'overspend_warning',
         'goal_milestone',
         'subscription_renewal',
+        'review_prompt', // MODULE 3 FEATURE 1: Mutual Review & Rating System
       ],
       required: true,
     },

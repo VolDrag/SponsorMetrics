@@ -240,6 +240,14 @@ const MyEvents = () => {
                       </Link>
                     )}
 
+                    {/* MODULE 2 | Feature 1: Proposal Creator */}
+                    <Link
+                      to={`/organizer/proposals/new?eventId=${event._id}`}
+                      className="px-3 py-1.5 text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors font-medium"
+                    >
+                      Create Proposal
+                    </Link>
+
                     <Link
                       to="/organizer/proposal-analyzer"
                       className="px-3 py-1.5 text-sm bg-slate-900 text-white hover:bg-slate-800 rounded-lg transition-colors font-semibold flex items-center gap-1.5"

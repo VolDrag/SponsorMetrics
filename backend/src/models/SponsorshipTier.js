@@ -39,6 +39,13 @@ const sponsorshipTierSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    // ===== MODULE 3 FEATURE 4: A/B Experiment Tracker — START =====
+    formatType: {
+      type: String,
+      enum: ['banner', 'booth', 'speaking_slot', 'social_post', 'other'],
+      default: 'other',
+    },
+    // ===== MODULE 3 FEATURE 4: A/B Experiment Tracker — END =====
     benefits: {
       type: [benefitSchema],
       default: [],

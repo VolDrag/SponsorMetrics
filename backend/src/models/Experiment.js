@@ -1,18 +1,29 @@
 const mongoose = require('mongoose');
 
-const resultSchema = new mongoose.Schema(
+// ===== MODULE 3 FEATURE 4: A/B Experiment Tracker for Sponsorship Formats — START =====
+const variantSchema = new mongoose.Schema(
   {
-    format: {
+    label: {
       type: String,
       required: true,
       trim: true,
     },
-    value: {
-      type: Number,
+    formatType: {
+      type: String,
+      enum: ['banner', 'booth', 'speaking_slot', 'social_post', 'other'],
       required: true,
     },
+    taggedEventIds: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'Event',
+      default: [],
+    },
+    isControl: {
+      type: Boolean,
+      default: false,
+    },
   },
-  { _id: false }
+  { _id: true }
 );
 
 const experimentSchema = new mongoose.Schema(
@@ -21,27 +32,22 @@ const experimentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
+      index: true,
     },
     name: {
       type: String,
       required: true,
       trim: true,
-    },
-    formatsCompared: {
-      type: [String],
-      default: [],
+      maxlength: [200, 'Experiment name cannot exceed 200 characters'],
     },
     primaryMetric: {
       type: String,
-      trim: true,
+      enum: ['costPerReach', 'costPerEngagement', 'audienceGrowth', 'engagementRate'],
+      required: true,
     },
-    results: {
-      type: [resultSchema],
+    variants: {
+      type: [variantSchema],
       default: [],
-    },
-    winningFormat: {
-      type: String,
-      trim: true,
     },
   },
   {
@@ -50,6 +56,5 @@ const experimentSchema = new mongoose.Schema(
   }
 );
 
-const Experiment = mongoose.model('Experiment', experimentSchema);
-
-module.exports = Experiment;
+module.exports = mongoose.model('Experiment', experimentSchema);
+// ===== MODULE 3 FEATURE 4: A/B Experiment Tracker for Sponsorship Formats — END =====

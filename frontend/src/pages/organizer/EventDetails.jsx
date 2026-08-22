@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import eventApi from '../../services/eventApi';
+import MarketingAdvicePanel from '../../components/organizer/MarketingAdvicePanel';
 
 const EventDetails = () => {
   const { id } = useParams();
@@ -83,6 +84,9 @@ const EventDetails = () => {
               <p className="text-gray-500">Event details and management</p>
             </div>
             <div className="flex gap-2">
+              {/* ===== MODULE 4 FEATURE 4: AI-Powered Marketing Consultation — START ===== */}
+              <MarketingAdvicePanel eventId={id} />
+              {/* ===== MODULE 4 FEATURE 4: AI-Powered Marketing Consultation — END ===== */}
               {event.status === 'draft' && (
                 <>
                   <button
@@ -146,7 +150,7 @@ const EventDetails = () => {
           </div>
 
           {/* Sponsorship Tiers */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm mb-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-gray-800">Sponsorship Tiers</h2>
               <Link
@@ -162,6 +166,44 @@ const EventDetails = () => {
                 : 'Publish your event to make it visible to sponsors.'}
             </p>
           </div>
+
+          {/* ===== MODULE 3 FEATURE 2: Sponsorship Performance & ROI Analytics — START ===== */}
+          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-gray-800">Post-event metrics</h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  Submit reach, engagement, and attendance so sponsors can track ROI.
+                </p>
+              </div>
+              <Link
+                to={`/organizer/events/${id}/metrics`}
+                className="text-sm font-medium text-amber-600 hover:text-amber-700"
+              >
+                Submit numbers →
+              </Link>
+            </div>
+          </div>
+          {/* ===== MODULE 3 FEATURE 2: Sponsorship Performance & ROI Analytics — END ===== */}
+
+          {/* ===== MODULE 4 FEATURE 1: Volunteer Management System — START ===== */}
+          <div className="mt-6 bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-gray-800">Volunteers</h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  Roster, event-day check-in, and instruction emails.
+                </p>
+              </div>
+              <Link
+                to={`/organizer/events/${id}/volunteers`}
+                className="text-sm font-medium text-amber-600 hover:text-amber-700"
+              >
+                Manage volunteers →
+              </Link>
+            </div>
+          </div>
+          {/* ===== MODULE 4 FEATURE 1: Volunteer Management System — END ===== */}
         </div>
       </main>
     </div>

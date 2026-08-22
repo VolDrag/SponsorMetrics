@@ -39,9 +39,20 @@ const normalizeBenefits = (benefits) => {
     });
 };
 
+const inferFormatType = (benefits = [], explicit) => {
+  const allowed = ['banner', 'booth', 'speaking_slot', 'social_post', 'other'];
+  if (allowed.includes(explicit)) return explicit;
+  const labels = benefits.map((benefit) => String(benefit.label || '').toLowerCase()).join(' ');
+  if (labels.includes('booth')) return 'booth';
+  if (labels.includes('speaking')) return 'speaking_slot';
+  if (labels.includes('facebook') || labels.includes('social')) return 'social_post';
+  if (labels.includes('banner')) return 'banner';
+  return 'other';
+};
+
 const createTier = async (req, res) => {
   try {
-    const { eventId, name, price, isCustom, benefits } = req.body;
+    const { eventId, name, price, isCustom, benefits, formatType } = req.body;
     const normalizedName = String(name || '').trim();
     const normalizedPrice = Number(price);
 
@@ -62,12 +73,16 @@ const createTier = async (req, res) => {
       return res.status(403).json({ message: 'You can only create tiers for your own events.' });
     }
 
+    const normalizedBenefits = normalizeBenefits(benefits);
     const tier = await SponsorshipTier.create({
       eventId,
       name: normalizedName,
       price: normalizedPrice,
       isCustom: Boolean(isCustom),
-      benefits: normalizeBenefits(benefits),
+      benefits: normalizedBenefits,
+      // ===== MODULE 3 FEATURE 4: A/B Experiment Tracker — START =====
+      formatType: inferFormatType(normalizedBenefits, formatType),
+      // ===== MODULE 3 FEATURE 4: A/B Experiment Tracker — END =====
     });
 
     return res.status(201).json({ tier });
@@ -94,7 +109,7 @@ const getTiersByEvent = async (req, res) => {
 const updateTier = async (req, res) => {
   try {
     const { tierId } = req.params;
-    const { name, price, isCustom, benefits } = req.body;
+    const { name, price, isCustom, benefits, formatType } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(tierId)) {
       return res.status(400).json({ message: 'Invalid tierId.' });
@@ -130,6 +145,11 @@ const updateTier = async (req, res) => {
     if (benefits !== undefined) {
       tier.benefits = normalizeBenefits(benefits);
     }
+    // ===== MODULE 3 FEATURE 4: A/B Experiment Tracker — START =====
+    if (formatType !== undefined || benefits !== undefined) {
+      tier.formatType = inferFormatType(tier.benefits, formatType);
+    }
+    // ===== MODULE 3 FEATURE 4: A/B Experiment Tracker — END =====
 
     await tier.save();
     return res.status(200).json({ tier });

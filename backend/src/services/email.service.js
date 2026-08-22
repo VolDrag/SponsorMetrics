@@ -47,3 +47,53 @@ exports.sendWelcomeEmail = async (email, name) => {
 
   await transporter.sendMail(mailOptions);
 };
+
+// ===== MODULE 3 FEATURE 3: Budget Pacing & Overspend Alert System — START =====
+exports.sendOverspendAlert = async (email, name, pacing) => {
+  const mailOptions = {
+    from: `"SponsorMetrics BD" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: 'Sponsorship budget overspend warning',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #b45309;">Budget pacing alert</h2>
+        <p>Hi ${name},</p>
+        <p>Your ${pacing.periodType} sponsorship budget is projected to overspend by <strong>${pacing.overspendPercent}%</strong>.</p>
+        <ul>
+          <li>Budget: BDT ${Number(pacing.budgetAmount || 0).toLocaleString()}</li>
+          <li>Committed so far: BDT ${Number(pacing.committedSpend || 0).toLocaleString()}</li>
+          <li>Daily burn rate: BDT ${Number(pacing.dailyBurnRate || 0).toLocaleString()}</li>
+          <li>Projected total: BDT ${Number(pacing.projectedTotalSpend || 0).toLocaleString()}</li>
+        </ul>
+        <p style="color: #6b7280; font-size: 12px;">You will only receive this alert once per budget period.</p>
+      </div>
+    `,
+  };
+
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.warn('Overspend alert skipped — EMAIL_USER / EMAIL_PASS not set');
+    return { skipped: true };
+  }
+
+  await transporter.sendMail(mailOptions);
+  return { skipped: false };
+};
+// ===== MODULE 3 FEATURE 3: Budget Pacing & Overspend Alert System — END =====
+
+// ===== MODULE 4 FEATURE 1: Volunteer Management System — START =====
+exports.sendVolunteerInstructions = async (to, subject, htmlBody) => {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.warn('Volunteer email skipped — EMAIL_USER / EMAIL_PASS not set');
+    return { skipped: true };
+  }
+
+  await transporter.sendMail({
+    from: `"SponsorMetrics BD" <${process.env.EMAIL_USER}>`,
+    to,
+    subject,
+    html: htmlBody,
+  });
+  return { skipped: false };
+};
+// ===== MODULE 4 FEATURE 1: Volunteer Management System — END =====
+

@@ -15,6 +15,7 @@ import {
   Search
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import RateDealBanner from '../common/RateDealBanner'; // MODULE 3 | Feature 1
 
 const Sidebar = () => {
   const { logout, user } = useAuth();
@@ -27,19 +28,20 @@ const Sidebar = () => {
 
   const sponsorNavItems = [
     { name: 'Discovery', icon: Search, path: '/sponsor/discovery' },
-    { name: 'Marketplace', icon: Store, path: '/marketplace' },
-    { name: 'Campaigns', icon: Megaphone, path: '/campaigns' },
-    { name: 'Analytics', icon: BarChart2, path: '/analytics' },
-    { name: 'Proposals', icon: FileText, path: '/proposals' },
-    { name: 'Settings', icon: Settings, path: '/settings' },
+    { name: 'Proposals', icon: FileText, path: '/sponsor/proposals' }, // MODULE 2 | Feature 2
+    { name: 'Portfolio', icon: Megaphone, path: '/sponsor/portfolio' }, // MODULE 2 | Feature 3
+    { name: 'Analytics', icon: BarChart2, path: '/sponsor/analytics' }, // MODULE 3 | Feature 2
+    { name: 'Experiments', icon: LayoutGrid, path: '/sponsor/experiments' }, // MODULE 3 | Feature 4
+    { name: 'Reports', icon: FileText, path: '/sponsor/reports' }, // MODULE 4 | Feature 2
+    { name: 'Settings', icon: Settings, path: '/sponsor/settings' }, // MODULE 3 | Feature 3
   ];
 
   const organizerNavItems = [
     { name: 'Event Hub', icon: LayoutDashboard, path: '/organizer/events' },
+    { name: 'Proposals', icon: FileText, path: '/organizer/proposals' }, // MODULE 2 | Feature 1
+    { name: 'Status Tracker', icon: LayoutGrid, path: '/organizer/proposal-tracker' }, // MODULE 2 | Feature 4
     { name: 'Marketplace', icon: Store, path: '/marketplace' },
-    { name: 'Campaigns', icon: Megaphone, path: '/campaigns' },
     { name: 'Analytics', icon: BarChart2, path: '/analytics' },
-    { name: 'Proposals', icon: FileText, path: '/proposals' },
     { name: 'Settings', icon: Settings, path: '/settings' },
   ];
 
@@ -124,6 +126,9 @@ const DashboardLayout = ({ children }) => {
       <div className="flex-1 flex flex-col">
         <Topbar />
         <main className="flex-1 p-8 ml-64 overflow-x-hidden">
+          {/* ===== MODULE 3 FEATURE 1: Mutual Review & Rating System — START ===== */}
+          <RateDealBanner />
+          {/* ===== MODULE 3 FEATURE 1: Mutual Review & Rating System — END ===== */}
           {children}
         </main>
       </div>

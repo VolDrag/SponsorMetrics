@@ -51,6 +51,12 @@ exports.registerValidation = [
     .trim()
     .matches(/^[0-9+\-\s()]+$/)
     .withMessage('Invalid phone number format'),
+
+  body('website')
+    .optional({ checkFalsy: true })
+    .trim()
+    .isLength({ max: 300 })
+    .withMessage('Website is too long'),
 ];
 
 exports.loginValidation = [

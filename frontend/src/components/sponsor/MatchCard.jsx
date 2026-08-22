@@ -1,5 +1,6 @@
 // Rafi
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { MapPin, Users, Target, Building } from 'lucide-react';
 
 const MatchCard = ({ matchData }) => {
@@ -30,7 +31,13 @@ const MatchCard = ({ matchData }) => {
           </div>
           <div className="flex items-center">
             <Building className="w-4 h-4 mr-2 opacity-70" />
-            <span className="truncate">{event.organizerId?.organizationName || 'Organizer'}</span>
+            {event.organizerId?._id ? (
+              <Link to={`/profile/${event.organizerId._id}`} className="truncate text-amber-700 hover:underline">
+                {event.organizerId?.organizationName || 'Organizer'}
+              </Link>
+            ) : (
+              <span className="truncate">{event.organizerId?.organizationName || 'Organizer'}</span>
+            )}
           </div>
           <div className="flex items-center">
             <Target className="w-4 h-4 mr-2 opacity-70" />

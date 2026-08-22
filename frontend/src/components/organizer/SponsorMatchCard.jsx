@@ -1,7 +1,9 @@
 import React from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { Building, ShieldCheck, PieChart, Star } from 'lucide-react';
 
 const SponsorMatchCard = ({ matchData }) => {
+  const { eventId } = useParams();
   const { sponsor, matchScore, matchReason } = matchData;
   
   return (
@@ -9,8 +11,11 @@ const SponsorMatchCard = ({ matchData }) => {
       <div className="p-6 flex-1">
         <div className="flex justify-between items-start mb-4">
           <div>
-            <h3 className="text-xl font-bold text-slate-900">{sponsor.organizationName || sponsor.name}</h3>
-            <span className="text-sm font-medium text-slate-500">{sponsor.industry || 'General Industry'}</span>
+            {/* MODULE 3 FEATURE 1: public profile already rendered on this match card */}
+            <Link to={`/profile/${sponsor._id}`} className="text-xl font-bold text-slate-900 hover:text-amber-600">
+              {sponsor.organizationName || sponsor.name}
+            </Link>
+            <span className="block text-sm font-medium text-slate-500">{sponsor.industry || 'General Industry'}</span>
           </div>
           <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-700 border border-orange-200">
             {matchScore}% Match
@@ -36,7 +41,11 @@ const SponsorMatchCard = ({ matchData }) => {
           </div>
           <div className="flex items-center">
             <Star className="w-4 h-4 mr-2 opacity-70 text-yellow-500" />
-            <span>{sponsor.credibilityScore || 0}/5 Credibility</span>
+            {/* ===== MODULE 3 FEATURE 1: Mutual Review & Rating System — START ===== */}
+            <span>
+              Rel {Number(sponsor.avgReliability || 0).toFixed(1)} · Comm {Number(sponsor.avgCommunication || 0).toFixed(1)} · {sponsor.reviewCount || 0} reviews
+            </span>
+            {/* ===== MODULE 3 FEATURE 1: Mutual Review & Rating System — END ===== */}
           </div>
           <div className="flex items-center">
             <PieChart className="w-4 h-4 mr-2 opacity-70" />
@@ -46,9 +55,13 @@ const SponsorMatchCard = ({ matchData }) => {
       </div>
       
       <div className="bg-slate-50 px-6 py-4 border-t flex justify-end items-center">
-        <button className="bg-[#1E2337] hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+        {/* MODULE 2 | Feature 1: Proposal Creator — prefill event + sponsor */}
+        <Link
+          to={`/organizer/proposals/new?eventId=${eventId}&sponsorId=${sponsor._id}`}
+          className="bg-[#1E2337] hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+        >
           Pitch Proposal
-        </button>
+        </Link>
       </div>
     </div>
   );

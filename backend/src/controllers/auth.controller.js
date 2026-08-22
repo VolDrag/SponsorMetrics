@@ -9,14 +9,14 @@ const generateToken = (id) => {
 
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role, organizationName, organizationType, industry, budgetTier, phone } = req.body;
+    const { name, email, password, role, organizationName, organizationType, industry, budgetTier, phone, website } = req.body;
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return res.status(400).json({ success: false, message: 'Email already registered' });
     }
     const user = await User.create({
       name, email: email.toLowerCase(), password, role,
-      organizationName, organizationType, industry, budgetTier, phone,
+      organizationName, organizationType, industry, budgetTier, phone, website,
       isVerified: true
     });
     const token = generateToken(user._id);

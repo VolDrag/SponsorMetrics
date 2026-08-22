@@ -1,12 +1,122 @@
 const mongoose = require('mongoose');
 
+// ========== MODULE 2 | Feature 2: Proposal Review & In-Platform Negotiation — START ==========
+// Each counter-offer is stored as its own subdocument (negotiation history).
+const counterOfferSchema = new mongoose.Schema(
+  {
+    offeredBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    role: {
+      type: String,
+      enum: ['sponsor', 'organizer'],
+      required: true,
+    },
+    proposedBudget: {
+      type: Number,
+      min: 0,
+    },
+    swapFrom: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    swapTo: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    message: {
+      type: String,
+      trim: true,
+      default: '',
+      maxlength: [2000, 'Counter-offer message cannot exceed 2000 characters'],
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'accepted', 'rejected'],
+      default: 'pending',
+    },
+  },
+  { timestamps: true }
+);
+// ========== MODULE 2 | Feature 2: counterOfferSchema — END ==========
+
 const proposalSchema = new mongoose.Schema(
   {
     eventId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Event',
-      required: false,
+      required: false, // Module 1 analyzer may omit this; Feature 1 always sets it
     },
+    // ========== MODULE 2 | Feature 1: Proposal Creator — START ==========
+    organizerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      index: true,
+    },
+    sponsorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      index: true,
+    },
+    selectedTierId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'SponsorshipTier',
+    },
+    notes: {
+      type: String,
+      default: '',
+      trim: true,
+      maxlength: [2000, 'Notes cannot exceed 2000 characters'],
+    },
+    goals: {
+      type: String,
+      default: '',
+      trim: true,
+      maxlength: [1000, 'Goals cannot exceed 1000 characters'],
+    },
+    body: {
+      type: String,
+      default: '',
+      maxlength: [8000, 'Proposal body cannot exceed 8000 characters'],
+    },
+    proposedBudget: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+    // ===== MODULE 3 FEATURE 4: A/B Experiment Tracker — START =====
+    formatType: {
+      type: String,
+      enum: ['banner', 'booth', 'speaking_slot', 'social_post', 'other'],
+      default: 'other',
+    },
+    // ===== MODULE 3 FEATURE 4: A/B Experiment Tracker — END =====
+    // MODULE 2 | Feature 1 + Feature 4: pipeline status (Drafted → Sent → Viewed → Negotiation → Accepted/Rejected)
+    status: {
+      type: String,
+      enum: ['drafted', 'sent', 'viewed', 'negotiation', 'accepted', 'rejected'],
+      default: 'drafted',
+      index: true,
+    },
+    sentAt: {
+      type: Date,
+      default: null,
+    },
+    // MODULE 2 | Feature 2 + Feature 4: set when the sponsor first opens a sent proposal
+    viewedAt: {
+      type: Date,
+      default: null,
+    },
+    respondedAt: {
+      type: Date,
+      default: null,
+    },
+    // ========== MODULE 2 | Feature 1: Proposal Creator — END ==========
+    // Module 1 analyzer fields (kept for Proposal Strength Analyzer)
     rawBulletPoints: {
       type: String,
       default: '',
@@ -29,6 +139,35 @@ const proposalSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    // MODULE 2 | Feature 2: negotiation history records
+    counterOffers: {
+      type: [counterOfferSchema],
+      default: [],
+    },
+    // BUGFIX: prevent self-acceptance of own offer — Module 2 Feature 2
+    lastActionBy: {
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+      role: {
+        type: String,
+        enum: ['organizer', 'sponsor'],
+      },
+    },
+    // ===== MODULE 4 FEATURE 3: AI Fraud & Spam Detection — START =====
+    // A real moderation queue is out of scope for this MVP — flagged proposals are held and shown to the organizer instead of being silently hidden.
+    fraudFlags: {
+      type: [String],
+      default: [],
+    },
+    fraudRiskScore: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+    },
+    // ===== MODULE 4 FEATURE 3: AI Fraud & Spam Detection — END =====
   },
   {
     timestamps: true,
@@ -36,5 +175,7 @@ const proposalSchema = new mongoose.Schema(
 );
 
 proposalSchema.index({ eventId: 1 });
+proposalSchema.index({ organizerId: 1, status: 1 });
+proposalSchema.index({ sponsorId: 1, status: 1 });
 
 module.exports = mongoose.model('Proposal', proposalSchema);

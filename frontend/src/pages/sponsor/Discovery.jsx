@@ -4,6 +4,7 @@ import api from '../../services/api';
 import { Search, Filter, MapPin, Users, Target, Building } from 'lucide-react';
 
 import MatchCard from '../../components/sponsor/MatchCard';
+import BudgetPacingWidget from '../../components/sponsor/BudgetPacingWidget';
 
 // Rafi
 const Discovery = () => {
@@ -51,6 +52,10 @@ const Discovery = () => {
         <h1 className="text-3xl font-bold text-slate-900 mb-2">Discovery & Matching</h1>
         <p className="text-slate-600">Find the perfect events aligned with your brand's goals and budget.</p>
       </div>
+
+      {/* ===== MODULE 3 FEATURE 3: Budget Pacing & Overspend Alert System — START ===== */}
+      <BudgetPacingWidget />
+      {/* ===== MODULE 3 FEATURE 3: Budget Pacing & Overspend Alert System — END ===== */}
 
       <div className="flex items-center justify-between mb-6 bg-white p-4 rounded-xl border border-slate-200 shadow-sm gap-4">
         <div className="flex-1 relative">

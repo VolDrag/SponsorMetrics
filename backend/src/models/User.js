@@ -50,10 +50,36 @@ const userSchema = new mongoose.Schema(
       min: 0,
       max: 5,
     },
+    // ===== MODULE 3 FEATURE 1: Mutual Review & Rating System — START =====
+    avgReliability: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5,
+    },
+    avgCommunication: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5,
+    },
+    reviewCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    // ===== MODULE 3 FEATURE 1: Mutual Review & Rating System — END =====
     phone: {
       type: String,
       trim: true,
     },
+    // ===== MODULE 4 FEATURE 3: AI Fraud & Spam Detection — START =====
+    website: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    // ===== MODULE 4 FEATURE 3: AI Fraud & Spam Detection — END =====
     isVerified: {
       type: Boolean,
       default: true,

@@ -21,6 +21,7 @@ const Register = () => {
     industry: '',
     budgetTier: 'small',
     phone: '',
+    website: '',
   });
 
   const handleChange = (e) => {
@@ -296,6 +297,20 @@ const Register = () => {
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="+880 1XXX-XXXXXX"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Organization website
+                </label>
+                <input
+                  type="url"
+                  name="website"
+                  value={formData.website}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="https://example.org"
                 />
               </div>
 
