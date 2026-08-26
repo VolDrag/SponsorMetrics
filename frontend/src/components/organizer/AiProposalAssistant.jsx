@@ -32,6 +32,9 @@ const AiProposalAssistant = ({
       setDraft(result.text || '');
       setSource(result.source || '');
       setEditing(false);
+      if (result.error && result.source !== 'gemini') {
+        setError(result.error);
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to rewrite your notes');
     } finally {

@@ -8,6 +8,7 @@ const {
   submitMetricsValidation,
   sponsorIdParamValidation,
   eventIdParamValidation,
+  askAboutRoiValidation,
 } = require('../validators/analytics.validator');
 
 // ===== MODULE 3 FEATURE 2: Sponsorship Performance & ROI Analytics — START =====
@@ -35,6 +36,15 @@ router.get(
   sponsorIdParamValidation,
   validate,
   analyticsController.getSponsorRoi
+);
+
+router.post(
+  '/ask',
+  authenticate,
+  requireRole('sponsor'),
+  askAboutRoiValidation,
+  validate,
+  analyticsController.askAboutRoi
 );
 // ===== MODULE 3 FEATURE 2: Sponsorship Performance & ROI Analytics — END =====
 

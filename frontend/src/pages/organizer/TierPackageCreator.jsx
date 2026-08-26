@@ -4,15 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import {
   Blocks,
   Pencil,
-  LayoutDashboard,
-  Store,
-  Target,
-  BarChart3,
   FileText,
-  Settings,
-  Search,
   Plus,
-  HelpCircle,
   LogOut,
   Sparkles,
   ArrowLeft,
@@ -270,12 +263,8 @@ const TierPackageCreatorContent = () => {
   const selectedEvent = events?.find((e) => e && String(e._id) === String(selectedEventId));
 
   const navItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/organizer/events', active: false },
-    { icon: Store, label: 'Marketplace', path: '/organizer/events', active: false },
-    { icon: Target, label: 'Campaigns', path: '/organizer/events', active: false },
-    { icon: BarChart3, label: 'Analytics', path: '/organizer/events', active: false },
-    { icon: FileText, label: 'Manage Tiers', path: `/organizer/events/${selectedEventId || ''}/tiers`, active: true },
-    { icon: Settings, label: 'Settings', path: '/organizer/events', active: false },
+    { icon: FileText, label: 'My Events', path: '/organizer/events', active: false },
+    { icon: Blocks, label: 'Manage Tiers', path: `/organizer/events/${selectedEventId || ''}/tiers`, active: true },
   ];
 
   return (
@@ -314,17 +303,11 @@ const TierPackageCreatorContent = () => {
             to="/organizer/events/new"
             className="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2.5 px-4 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors"
           >
-            <Plus className="h-4 w-4" strokeWidth={2} /> New Campaign
+            <Plus className="h-4 w-4" strokeWidth={2} /> New Event
           </Link>
         </div>
 
-        <div className="p-3 border-t border-slate-800 space-y-0.5">
-          <Link
-            to="/organizer/events"
-            className="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white text-sm font-medium transition-colors"
-          >
-            <HelpCircle className="h-4 w-4" strokeWidth={1.75} /> Help Center
-          </Link>
+        <div className="p-3 border-t border-slate-800">
           <button
             onClick={logout}
             className="w-full flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white text-sm font-medium transition-colors text-left"
@@ -337,23 +320,13 @@ const TierPackageCreatorContent = () => {
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
-        <div className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8">
-          <div className="flex items-center gap-4">
-            <Link
-              to="/organizer/events"
-              className="flex items-center gap-2 text-sm text-slate-600 hover:text-amber-600 font-medium transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" /> Back to Events
-            </Link>
-          </div>
-          <div className="relative w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" strokeWidth={1.75} />
-            <input
-              type="text"
-              placeholder="Search proposals..."
-              className="w-full pl-9 pr-4 py-2 bg-gray-100 rounded-lg text-sm text-gray-700 outline-none focus:ring-2 focus:ring-amber-500/20 focus:bg-white border border-transparent focus:border-amber-500 transition-all"
-            />
-          </div>
+        <div className="h-16 bg-white border-b border-gray-200 flex items-center px-8">
+          <Link
+            to="/organizer/events"
+            className="flex items-center gap-2 text-sm text-slate-600 hover:text-amber-600 font-medium transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to Events
+          </Link>
         </div>
 
         <div className="flex-1 p-8 overflow-auto">

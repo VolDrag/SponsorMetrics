@@ -25,8 +25,13 @@ const MarketingAdvicePanel = ({ eventId, disabled = false }) => {
     setError('');
     try {
       const res = await marketingApi.getEventAdvice(eventId);
-      setRecommendations(res.data.data.recommendations || []);
-      setSource(res.data.data.source || '');
+      const payload = res.data.data || {};
+      const cards = payload.recommendations || [];
+      setRecommendations(cards);
+      setSource(payload.source || '');
+      if (payload.error && !cards.length) {
+        setError(payload.error);
+      }
       setOpen(true);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to generate advice');

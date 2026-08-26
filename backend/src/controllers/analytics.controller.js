@@ -1,6 +1,7 @@
 const PostEventMetrics = require('../models/PostEventMetrics');
 const Proposal = require('../models/Proposal');
 const Event = require('../models/Event');
+const { explainRoiStats } = require('../services/gemini.service');
 
 // ===== MODULE 3 FEATURE 2: Sponsorship Performance & ROI Analytics — START =====
 const safeDivide = (numerator, denominator) => {
@@ -191,41 +192,7 @@ exports.getSponsorRoi = async (req, res) => {
       });
     }
 
-    const proposals = await Proposal.find({
-      sponsorId,
-      status: 'accepted',
-    })
-      .populate('eventId', 'name date venue expectedCrowdSize')
-      .populate('organizerId', 'name organizationName');
-
-    const metrics = await PostEventMetrics.find({
-      proposalId: { $in: proposals.map((proposal) => proposal._id) },
-    });
-    const metricsByProposal = {};
-    metrics.forEach((row) => {
-      metricsByProposal[String(row.proposalId)] = row;
-    });
-
-    const rows = proposals
-      .filter((proposal) => metricsByProposal[String(proposal._id)])
-      .map((proposal) => {
-        const metric = metricsByProposal[String(proposal._id)];
-        return {
-          proposalId: proposal._id,
-          eventId: proposal.eventId?._id || proposal.eventId,
-          eventName: proposal.eventId?.name || 'Event',
-          eventDate: proposal.eventId?.date,
-          venue: proposal.eventId?.venue,
-          organizerName: proposal.organizerId?.organizationName || proposal.organizerId?.name,
-          sponsorshipCost: Number(proposal.proposedBudget || 0),
-          totalReach: metric.totalReach,
-          totalEngagement: metric.totalEngagement,
-          attendeeCount: metric.attendeeCount,
-          submittedAt: metric.submittedAt,
-        };
-      });
-
-    const payload = exports.buildRoiPayload(rows);
+    const payload = await loadSponsorRoiPayload(sponsorId);
 
     res.status(200).json({
       success: true,
@@ -235,6 +202,74 @@ exports.getSponsorRoi = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to compute ROI analytics',
+      error: error.message,
+    });
+  }
+};
+
+const loadSponsorRoiPayload = async (sponsorId) => {
+  const proposals = await Proposal.find({
+    sponsorId,
+    status: 'accepted',
+  })
+    .populate('eventId', 'name date venue expectedCrowdSize')
+    .populate('organizerId', 'name organizationName');
+
+  const metrics = await PostEventMetrics.find({
+    proposalId: { $in: proposals.map((proposal) => proposal._id) },
+  });
+  const metricsByProposal = {};
+  metrics.forEach((row) => {
+    metricsByProposal[String(row.proposalId)] = row;
+  });
+
+  const rows = proposals
+    .filter((proposal) => metricsByProposal[String(proposal._id)])
+    .map((proposal) => {
+      const metric = metricsByProposal[String(proposal._id)];
+      return {
+        proposalId: proposal._id,
+        eventId: proposal.eventId?._id || proposal.eventId,
+        eventName: proposal.eventId?.name || 'Event',
+        eventDate: proposal.eventId?.date,
+        venue: proposal.eventId?.venue,
+        organizerName: proposal.organizerId?.organizationName || proposal.organizerId?.name,
+        sponsorshipCost: Number(proposal.proposedBudget || 0),
+        totalReach: metric.totalReach,
+        totalEngagement: metric.totalEngagement,
+        attendeeCount: metric.attendeeCount,
+        submittedAt: metric.submittedAt,
+      };
+    });
+
+  return exports.buildRoiPayload(rows);
+};
+
+// @desc    Ask Gemini about this sponsor's ROI stats, setbacks, and how to improve
+// @route   POST /api/analytics/ask
+// @access  Private (Sponsor)
+exports.askAboutRoi = async (req, res) => {
+  try {
+    const question = String(req.body.question || '').trim();
+    const history = Array.isArray(req.body.history) ? req.body.history : [];
+    const payload = await loadSponsorRoiPayload(req.user._id);
+    const result = await explainRoiStats(question, payload, history);
+
+    res.status(200).json({
+      success: true,
+      message: result.source === 'gemini' ? 'Insight generated' : (result.error
+        ? `Gemini API failed (${result.error}). Showing a local summary instead.`
+        : 'Insight generated (local assistant)'),
+      data: {
+        text: result.text,
+        source: result.source,
+        error: result.error || undefined,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to generate analytics insight',
       error: error.message,
     });
   }

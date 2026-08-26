@@ -2,17 +2,14 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
-  Store,
   Megaphone,
   BarChart2,
   FileText,
   Settings,
-  HelpCircle,
   LogOut,
-  Bell,
-  MessageSquare,
   LayoutGrid,
-  Search
+  Search,
+  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import RateDealBanner from '../common/RateDealBanner'; // MODULE 3 | Feature 1
@@ -40,9 +37,7 @@ const Sidebar = () => {
     { name: 'Event Hub', icon: LayoutDashboard, path: '/organizer/events' },
     { name: 'Proposals', icon: FileText, path: '/organizer/proposals' }, // MODULE 2 | Feature 1
     { name: 'Status Tracker', icon: LayoutGrid, path: '/organizer/proposal-tracker' }, // MODULE 2 | Feature 4
-    { name: 'Marketplace', icon: Store, path: '/marketplace' },
-    { name: 'Analytics', icon: BarChart2, path: '/analytics' },
-    { name: 'Settings', icon: Settings, path: '/settings' },
+    { name: 'Proposal Analyzer', icon: Sparkles, path: '/organizer/proposal-analyzer' },
   ];
 
   const navItems = user?.role === 'sponsor' ? sponsorNavItems : organizerNavItems;
@@ -76,11 +71,7 @@ const Sidebar = () => {
           ))}
         </ul>
       </nav>
-      <div className="px-6 pb-6 pt-2 space-y-4">
-        <button className="flex items-center text-sm font-medium hover:text-white transition-colors">
-          <HelpCircle className="w-5 h-5 mr-3 opacity-75" />
-          Help Center
-        </button>
+      <div className="px-6 pb-6 pt-2">
         <button
           onClick={handleLogout}
           className="flex items-center text-sm font-medium hover:text-white transition-colors"
@@ -98,19 +89,9 @@ const Topbar = () => {
   const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=1E2337&color=fff&length=1`;
 
   return (
-    <div className="h-16 bg-white border-b flex items-center justify-between px-6 sticky top-0 z-10 ml-64">
-      <div className="flex-1 max-w-xl relative">
-        <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-        <input
-          type="text"
-          placeholder="Search deals, contracts, or partners..."
-          className="w-full pl-9 pr-4 py-2 bg-slate-100 border-none rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#F5A623]"
-        />
-      </div>
-      <div className="flex items-center space-x-6 text-slate-500">
-        <button className="hover:text-slate-800 transition-colors"><Bell className="w-5 h-5" /></button>
-        <button className="hover:text-slate-800 transition-colors"><MessageSquare className="w-5 h-5" /></button>
-        <button className="hover:text-slate-800 transition-colors"><LayoutGrid className="w-5 h-5" /></button>
+    <div className="h-16 bg-white border-b flex items-center justify-end px-6 sticky top-0 z-10 ml-64">
+      <div className="flex items-center space-x-3 text-slate-500">
+        <span className="text-sm font-medium text-slate-700">{user?.name || user?.organizationName}</span>
         <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden border border-slate-300">
           <img src={avatarUrl} alt="Avatar" />
         </div>

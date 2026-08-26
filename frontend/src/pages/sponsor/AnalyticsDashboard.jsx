@@ -13,6 +13,7 @@ import {
   YAxis,
 } from 'recharts';
 import DashboardLayout from '../../components/layout/DashboardLayout';
+import AnalyticsInsightPanel from '../../components/sponsor/AnalyticsInsightPanel';
 import analyticsApi from '../../services/analyticsApi';
 import { useAuth } from '../../context/AuthContext';
 
@@ -165,6 +166,8 @@ const AnalyticsDashboard = () => {
             </div>
           </>
         )}
+
+        {!loading && <AnalyticsInsightPanel />}
       </div>
     </DashboardLayout>
   );

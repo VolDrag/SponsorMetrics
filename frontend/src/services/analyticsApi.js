@@ -5,6 +5,7 @@ const analyticsApi = {
   submitMetrics: (payload) => api.post('/analytics/metrics', payload),
   getEventMetrics: (eventId) => api.get(`/analytics/events/${eventId}/metrics`),
   getSponsorRoi: (sponsorId) => api.get(`/analytics/roi/${sponsorId}`),
+  askAboutRoi: (payload) => api.post('/analytics/ask', payload),
 };
 
 export default analyticsApi;

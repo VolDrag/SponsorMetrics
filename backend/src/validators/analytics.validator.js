@@ -34,4 +34,26 @@ exports.sponsorIdParamValidation = [
 exports.eventIdParamValidation = [
   param('eventId').isMongoId().withMessage('Invalid event ID'),
 ];
+
+exports.askAboutRoiValidation = [
+  body('question')
+    .trim()
+    .notEmpty()
+    .withMessage('Question is required')
+    .isLength({ min: 3, max: 500 })
+    .withMessage('Question must be between 3 and 500 characters'),
+  body('history')
+    .optional()
+    .isArray({ max: 8 })
+    .withMessage('History must be an array'),
+  body('history.*.role')
+    .optional()
+    .isIn(['user', 'assistant'])
+    .withMessage('History role must be user or assistant'),
+  body('history.*.content')
+    .optional()
+    .isString()
+    .isLength({ max: 2000 })
+    .withMessage('History content is too long'),
+];
 // ===== MODULE 3 FEATURE 2: Sponsorship Performance & ROI Analytics — END =====

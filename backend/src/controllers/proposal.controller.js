@@ -492,11 +492,14 @@ exports.aiAssist = async (req, res) => {
     res.status(200).json({
       success: true,
       message: result.source === 'gemini'
-        ? 'Proposal rewritten by AI'
-        : 'Proposal rewritten (local assistant — set GEMINI_API_KEY for Gemini)',
+        ? 'Proposal rewritten by Gemini'
+        : (result.error
+          ? `Gemini API failed (${result.error}). Showing a local draft instead.`
+          : 'Proposal rewritten (local assistant — set GEMINI_API_KEY for Gemini)'),
       data: {
         text: result.text,
         source: result.source,
+        error: result.error || undefined,
       },
     });
   } catch (error) {

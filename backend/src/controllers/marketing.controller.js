@@ -62,7 +62,11 @@ exports.getEventAdvice = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: result.source === 'gemini' ? 'Marketing advice generated' : 'Marketing advice generated (local fallback)',
+      message: result.source === 'gemini'
+        ? 'Marketing advice generated'
+        : (result.error
+          ? `Gemini API failed (${result.error}). Showing local advice instead.`
+          : 'Marketing advice generated (local fallback)'),
       data: result,
     });
   } catch (error) {

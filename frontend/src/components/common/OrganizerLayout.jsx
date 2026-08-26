@@ -1,23 +1,12 @@
 import { NavLink } from 'react-router-dom';
 import {
-  LayoutDashboard,
-  Store,
-  Megaphone,
-  BarChart3,
   FileText,
-  Settings,
-  Search,
   Sparkles,
 } from 'lucide-react';
 
 const navItems = [
-  { to: '/organizer', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/organizer/marketplace', label: 'Marketplace', icon: Store },
-  { to: '/organizer/campaigns', label: 'Campaigns', icon: Megaphone },
-  { to: '/organizer/analytics', label: 'Analytics', icon: BarChart3 },
-  { to: '/organizer/events', label: 'Proposals', icon: FileText },
+  { to: '/organizer/events', label: 'My Events', icon: FileText },
   { to: '/organizer/proposal-analyzer', label: 'Proposal Analyzer', icon: Sparkles },
-  { to: '/organizer/settings', label: 'Settings', icon: Settings },
 ];
 
 const OrganizerLayout = ({ children }) => {
@@ -55,17 +44,6 @@ const OrganizerLayout = ({ children }) => {
       </aside>
 
       <div className="flex-1">
-        <header className="border-b border-slate-200 bg-white px-8 py-4">
-          <div className="flex max-w-md items-center gap-2 rounded-lg bg-slate-100 px-3 py-2">
-            <Search className="h-4 w-4 text-slate-400" strokeWidth={2} />
-            <input
-              type="text"
-              placeholder="Search proposals..."
-              className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
-            />
-          </div>
-        </header>
-
         <main className="px-8 py-8">{children}</main>
       </div>
     </div>
