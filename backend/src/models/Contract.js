@@ -1,48 +1,39 @@
 const mongoose = require('mongoose');
 
-const contractSchema = new mongoose.Schema(
+const signatureSchema = new mongoose.Schema(
   {
-    dealId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Deal',
-      required: true,
-    },
-    agreedBudget: {
-      type: Number,
-      required: true,
-      min: 0,
-    },
-    eventDates: {
-      type: Date,
-      required: true,
-    },
-    promisedMaterials: {
-      type: [String],
-      default: [],
-    },
-    pdfUrl: {
-      type: String,
-      trim: true,
-    },
-    signedByOrganizer: {
-      type: Boolean,
-      default: false,
-    },
-    signedBySponsor: {
-      type: Boolean,
-      default: false,
-    },
-    generatedAt: {
-      type: Date,
-      default: Date.now,
-    },
+    fullName: String,
+    signedAt: Date,
+    ip: String,
+    documentHash: String,
   },
-  {
-    timestamps: true,
-    collection: 'contracts',
-  }
+  { _id: false }
 );
 
-const Contract = mongoose.model('Contract', contractSchema);
+const contractSchema = new mongoose.Schema(
+  {
+    dealId: { type: mongoose.Schema.Types.ObjectId, ref: 'Deal', required: true },
+    proposalId: { type: mongoose.Schema.Types.ObjectId, ref: 'Proposal' },
+    organizerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    sponsorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    agreedBudget: { type: Number, required: true, min: 0 },
+    eventDates: { type: Date, required: true },
+    promisedMaterials: { type: [String], default: [] },
+    pdfUrl: { type: String, trim: true },
+    documentHash: { type: String, trim: true },
+    signedByOrganizer: { type: Boolean, default: false },
+    signedBySponsor: { type: Boolean, default: false },
+    organizerSignature: signatureSchema,
+    sponsorSignature: signatureSchema,
+    status: {
+      type: String,
+      enum: ['unsigned', 'partially_signed', 'executed'],
+      default: 'unsigned',
+    },
+    generatedAt: { type: Date, default: Date.now },
+    executedAt: { type: Date },
+  },
+  { timestamps: true, collection: 'contracts' }
+);
 
-module.exports = Contract;
+module.exports = mongoose.model('Contract', contractSchema);

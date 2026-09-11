@@ -1,21 +1,31 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Add token to every request
+let memoryAccessToken = null;
+
+export const setAccessToken = (token) => {
+  memoryAccessToken = token || null;
+};
+
+export const getAccessToken = () => memoryAccessToken;
+
+const isAuthEndpoint = (url = '') =>
+  /\/auth\/(login|register|refresh|logout|verify-otp|resend-otp|me)/.test(url);
+
+let refreshChain = null;
+
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (memoryAccessToken) {
+      config.headers.Authorization = `Bearer ${memoryAccessToken}`;
     }
-    // MODULE 2 | Feature 3 Event Editing — let the browser set multipart boundary for photo uploads
     if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
       if (config.headers && typeof config.headers.delete === 'function') {
         config.headers.delete('Content-Type');
@@ -28,17 +38,31 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Handle token expiration
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+  async (error) => {
+    const original = error.config || {};
+    const status = error.response?.status;
+    if (status !== 401 || original._retry || isAuthEndpoint(original.url || '')) {
+      return Promise.reject(error);
     }
-    return Promise.reject(error);
+
+    original._retry = true;
+    try {
+      if (!refreshChain) {
+        refreshChain = api.post('/auth/refresh').finally(() => {
+          refreshChain = null;
+        });
+      }
+      const refreshed = await refreshChain;
+      const nextToken = refreshed?.data?.data?.accessToken;
+      if (nextToken) setAccessToken(nextToken);
+      return api(original);
+    } catch (refreshError) {
+      setAccessToken(null);
+      return Promise.reject(refreshError);
+    }
   }
 );
 
-export default api; 
+export default api;

@@ -88,6 +88,13 @@ const campaignSchema = new mongoose.Schema(
       type: eventReportSchema,
       default: () => ({}),
     },
+    paymentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Payment' },
+    bkashPaymentID: { type: String, trim: true },
+    escrowStatus: {
+      type: String,
+      enum: ['none', 'pending', 'held', 'released', 'refunded'],
+      default: 'none',
+    },
   },
   {
     timestamps: true,

@@ -37,6 +37,11 @@ const teamMemberSchema = new mongoose.Schema(
       enum: ['edit', 'view'],
       default: 'view',
     },
+    seatRole: {
+      type: String,
+      enum: ['view', 'negotiate', 'admin', 'edit'],
+      default: 'view',
+    },
     assignedEvents: {
       type: [
         {

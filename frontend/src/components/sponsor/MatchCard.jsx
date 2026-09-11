@@ -34,6 +34,7 @@ const MatchCard = ({ matchData }) => {
             {event.organizerId?._id ? (
               <Link to={`/profile/${event.organizerId._id}`} className="truncate text-amber-700 hover:underline">
                 {event.organizerId?.organizationName || 'Organizer'}
+                {event.organizerId?.orgVerified ? ' ✓' : ''}
               </Link>
             ) : (
               <span className="truncate">{event.organizerId?.organizationName || 'Organizer'}</span>

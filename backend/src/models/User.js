@@ -79,6 +79,12 @@ const userSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    orgVerified: { type: Boolean, default: false },
+    kycStatus: {
+      type: String,
+      enum: ['none', 'pending', 'approved', 'rejected'],
+      default: 'none',
+    },
     // ===== MODULE 4 FEATURE 3: AI Fraud & Spam Detection — END =====
     isVerified: {
       type: Boolean,
@@ -96,6 +102,19 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // ===== MODULE 9 FEATURE 1: httpOnly refresh-token rotation — START =====
+    refreshTokens: {
+      type: [
+        {
+          tokenHash: { type: String, required: true },
+          expiresAt: { type: Date, required: true },
+          createdAt: { type: Date, default: Date.now },
+        },
+      ],
+      default: [],
+      select: false,
+    },
+    // ===== MODULE 9 FEATURE 1: httpOnly refresh-token rotation — END =====
   },
   { timestamps: true }
 );

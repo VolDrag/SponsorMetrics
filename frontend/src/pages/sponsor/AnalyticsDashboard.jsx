@@ -16,6 +16,7 @@ import DashboardLayout from '../../components/layout/DashboardLayout';
 import AnalyticsInsightPanel from '../../components/sponsor/AnalyticsInsightPanel';
 import analyticsApi from '../../services/analyticsApi';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api';
 
 // ===== MODULE 3 FEATURE 2: Sponsorship Performance & ROI Analytics — START =====
 const formatValue = (value) => (value === null || value === undefined ? '—' : Number(value).toLocaleString());
@@ -55,6 +56,20 @@ const AnalyticsDashboard = () => {
         <p className="mt-1 text-sm text-slate-500">
           Cost-per-reach, cost-per-engagement, and audience growth versus your own historical average.
         </p>
+        <button
+          type="button"
+          className="mt-3 rounded border px-3 py-1.5 text-sm"
+          onClick={async () => {
+            const res = await api.get('/analytics/export.csv', { responseType: 'blob' });
+            const url = URL.createObjectURL(res.data);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'roi-export.csv';
+            a.click();
+          }}
+        >
+          Export CSV
+        </button>
 
         {loading && (
           <div className="mt-12 flex justify-center">

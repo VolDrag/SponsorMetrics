@@ -2,13 +2,28 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate } = require('../middleware/auth');
+const { validate } = require('../middleware/validate');
 const matchController = require('../controllers/match.controller');
+const {
+  discoverEventsValidation,
+  discoverSponsorsValidation,
+} = require('../validators/match.validator');
 
-// Sponsor looking for events
-router.get('/events', authenticate, matchController.discoverEvents);
+router.get(
+  '/events',
+  authenticate,
+  discoverEventsValidation,
+  validate,
+  matchController.discoverEvents
+);
 
-// Organizer looking for sponsors for a specific event
-router.get('/sponsors/:eventId', authenticate, matchController.discoverSponsors);
+router.get(
+  '/sponsors/:eventId',
+  authenticate,
+  discoverSponsorsValidation,
+  validate,
+  matchController.discoverSponsors
+);
 
 module.exports = router;
 // Rafi end

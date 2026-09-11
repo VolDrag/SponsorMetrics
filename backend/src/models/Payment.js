@@ -2,51 +2,44 @@ const mongoose = require('mongoose');
 
 const paymentSchema = new mongoose.Schema(
   {
-    dealId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Deal',
-    },
-    contractId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Contract',
-    },
-    sponsorId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-    organizerId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-    amount: {
-      type: Number,
-      required: true,
-      min: 0,
-    },
+    dealId: { type: mongoose.Schema.Types.ObjectId, ref: 'Deal' },
+    campaignId: { type: mongoose.Schema.Types.ObjectId, ref: 'Campaign' },
+    proposalId: { type: mongoose.Schema.Types.ObjectId, ref: 'Proposal' },
+    contractId: { type: mongoose.Schema.Types.ObjectId, ref: 'Contract' },
+    sponsorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    organizerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    amount: { type: Number, required: true, min: 0 },
+    vatAmount: { type: Number, default: 0 },
+    aitAmount: { type: Number, default: 0 },
+    currency: { type: String, default: 'BDT' },
     status: {
       type: String,
-      enum: ['held_in_escrow', 'released', 'refunded', 'disputed'],
-      default: 'held_in_escrow',
+      enum: ['initiated', 'executed', 'completed', 'failed', 'refunded'],
+      default: 'initiated',
     },
-    paymentGatewayRef: {
+    escrowStatus: {
       type: String,
-      trim: true,
+      enum: ['none', 'held', 'released', 'refunded'],
+      default: 'none',
     },
-    heldAt: {
-      type: Date,
-    },
-    releasedAt: {
-      type: Date,
+    bkashPaymentID: { type: String, trim: true },
+    paymentGatewayRef: { type: String, trim: true },
+    trxID: { type: String, trim: true },
+    invoiceNumber: { type: String, trim: true },
+    invoiceUrl: { type: String, trim: true },
+    mock: { type: Boolean, default: false },
+    heldAt: { type: Date },
+    executedAt: { type: Date },
+    releasedAt: { type: Date },
+    refund: {
+      amount: Number,
+      reason: String,
+      refundTrxID: String,
+      at: Date,
+      by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     },
   },
-  {
-    timestamps: true,
-    collection: 'payments',
-  }
+  { timestamps: true, collection: 'payments' }
 );
 
-const Payment = mongoose.model('Payment', paymentSchema);
-
-module.exports = Payment;
+module.exports = mongoose.model('Payment', paymentSchema);

@@ -1,7 +1,7 @@
 import api from './api';
 
 // MODULE 2 | Feature 3: Sponsor Portfolio Handler
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 export const SERVER_ORIGIN = API_BASE.replace(/\/api\/?$/, '');
 
 // MODULE 2 | Feature 3 Event Editing — turn stored /uploads paths into full URLs

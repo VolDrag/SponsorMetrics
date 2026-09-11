@@ -202,7 +202,7 @@ exports.createReview = async (req, res) => {
 exports.getUserReviews = async (req, res) => {
   try {
     const user = await User.findById(req.params.userId).select(
-      'name organizationName organizationType industry budgetTier role isVerified credibilityScore avgReliability avgCommunication reviewCount profilePicture'
+      'name organizationName organizationType industry budgetTier role isVerified orgVerified kycStatus credibilityScore avgReliability avgCommunication reviewCount profilePicture'
     );
 
     if (!user) {

@@ -186,6 +186,12 @@ exports.approveReport = async (req, res) => {
     report.signOff = { sponsorId: req.user._id, approvedAt: new Date() };
     await report.save();
 
+    try {
+      await require('../services/escrow.service').releaseOnReportApproval(proposal._id);
+    } catch (hookError) {
+      console.error('[escrow release]', hookError.message);
+    }
+
     const populated = await PostEventMetrics.findById(report._id).populate(POPULATE);
     res.status(200).json({ success: true, message: 'Report approved and archived', data: populated });
   } catch (error) {

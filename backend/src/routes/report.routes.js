@@ -5,7 +5,7 @@ const { authenticate } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roleCheck');
 const { validate } = require('../middleware/validate');
 const { param, body } = require('express-validator');
-const { uploadReportPhotos } = require('../middleware/upload');
+const { uploadReportPhotos, scanUploadedImages } = require('../middleware/upload');
 
 // ===== MODULE 4 FEATURE 2: Post-Event Report & Approval Workflow — START =====
 const proposalIdValidation = [param('proposalId').isMongoId().withMessage('Invalid proposal ID')];
@@ -30,6 +30,7 @@ router.put(
   authenticate,
   requireRole('organizer'),
   uploadReportPhotos,
+  scanUploadedImages,
   proposalIdValidation,
   validate,
   reportController.saveReport

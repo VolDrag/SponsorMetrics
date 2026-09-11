@@ -32,7 +32,10 @@ const computeAverageHash = async (filePath) => {
 
 const detectAiScore = async (filePath) => {
   const apiKey = process.env.HUGGINGFACE_API_KEY;
-  if (!apiKey) return null;
+  if (!apiKey) {
+    console.warn('[forensics] HUGGINGFACE_API_KEY missing — leaving photo Unverified');
+    return null;
+  }
 
   const image = fs.readFileSync(filePath);
   const urls = [
@@ -56,7 +59,8 @@ const detectAiScore = async (filePath) => {
       );
       const top = aiLabel || data[0];
       if (top && typeof top.score === 'number') return top.score;
-    } catch (_error) {
+    } catch (error) {
+      console.warn('[forensics] Hugging Face request failed:', error.message);
       continue;
     }
   }
@@ -74,7 +78,8 @@ exports.inspectImage = async (filePath, eventId) => {
 
   try {
     result.aiGeneratedScore = await detectAiScore(filePath);
-  } catch (_error) {
+  } catch (error) {
+    console.warn('[forensics] AI detector failed open (Unverified):', error.message);
     result.aiGeneratedScore = null;
   }
 
@@ -92,8 +97,8 @@ exports.inspectImage = async (filePath, eventId) => {
     }
     const url = `/uploads/reports/${path.basename(filePath)}`;
     await PhotoHash.create({ eventId, url, hash });
-  } catch (_error) {
-    // Fail open on hash errors — never mark fraudulent because hashing failed.
+  } catch (error) {
+    console.warn('[forensics] hash check failed open (Unverified):', error.message);
   }
 
   if (result.aiGeneratedScore != null && result.aiGeneratedScore >= AI_FLAG_THRESHOLD) {

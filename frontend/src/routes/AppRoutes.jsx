@@ -42,8 +42,13 @@ import BudgetSettings from '../pages/sponsor/BudgetSettings';
 import Experiments from '../pages/sponsor/Experiments';
 import VolunteerManagement from '../pages/organizer/VolunteerManagement';
 import VolunteerSignup from '../pages/public/VolunteerSignup';
+import Landing from '../pages/public/Landing';
 import OrganizerReportPage from '../pages/organizer/OrganizerReportPage';
 import SponsorReportReview, { SponsorReportsInbox } from '../pages/sponsor/SponsorReportReview';
+import AdminDashboard from '../pages/admin/AdminDashboard';
+import ContractsPage from '../pages/common/ContractsPage';
+import WorkspaceSettings from '../pages/common/WorkspaceSettings';
+import OrganizerAnalytics from '../pages/organizer/OrganizerAnalytics';
 
 const AppRoutes = () => {
   return (
@@ -51,6 +56,7 @@ const AppRoutes = () => {
       <BrowserRouter>
         <Routes>
           {/* Auth Routes */}
+          <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/volunteer-signup/:eventId" element={<VolunteerSignup />} />
           <Route path="/register" element={<Register />} />
@@ -288,9 +294,40 @@ const AppRoutes = () => {
           />
           {/* ===== MODULE 3 FEATURE 1: Mutual Review & Rating System — END ===== */}
 
-          {/* Default Redirect */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/contracts"
+            element={
+              <ProtectedRoute allowedRoles={['organizer', 'sponsor', 'admin']}>
+                <ContractsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/workspace"
+            element={
+              <ProtectedRoute allowedRoles={['organizer', 'sponsor', 'admin']}>
+                <WorkspaceSettings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizer/analytics"
+            element={
+              <ProtectedRoute allowedRoles={['organizer']}>
+                <OrganizerAnalytics />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

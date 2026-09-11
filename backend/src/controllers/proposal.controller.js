@@ -112,11 +112,20 @@ exports.createProposal = async (req, res) => {
 
     // ===== MODULE 4 FEATURE 3: AI Fraud & Spam Detection — START =====
     if (shouldSend) {
-      const screening = await screenProposal({
-        proposal: draftFields,
-        organizer: req.user,
-        event,
-      });
+      let screening;
+      try {
+        screening = await screenProposal({
+          proposal: draftFields,
+          organizer: req.user,
+          event,
+        });
+      } catch (screenError) {
+        console.error('[fraud] screen failed closed on create:', screenError.message);
+        return res.status(503).json({
+          success: false,
+          message: 'Fraud screening is unavailable. The proposal was not sent.',
+        });
+      }
       if (screening.flags.length) {
         const held = await Proposal.create({
           ...draftFields,
@@ -239,6 +248,9 @@ exports.getProposalById = async (req, res) => {
       proposal.status = 'viewed';
       proposal.viewedAt = new Date();
       await proposal.save();
+      require('../services/notification.service')
+        .notify(proposal.organizerId, 'proposal_viewed', 'A sponsor viewed your proposal.', proposal._id)
+        .catch(() => {});
     }
 
     const refreshed = await Proposal.findById(proposal._id).populate(POPULATE);
@@ -387,11 +399,20 @@ exports.sendProposal = async (req, res) => {
 
     // ===== MODULE 4 FEATURE 3: AI Fraud & Spam Detection — START =====
     const event = await Event.findById(proposal.eventId);
-    const screening = await screenProposal({
-      proposal,
-      organizer: req.user,
-      event,
-    });
+    let screening;
+    try {
+      screening = await screenProposal({
+        proposal,
+        organizer: req.user,
+        event,
+      });
+    } catch (screenError) {
+      console.error('[fraud] screen failed closed on send:', screenError.message);
+      return res.status(503).json({
+        success: false,
+        message: 'Fraud screening is unavailable. The proposal was not sent.',
+      });
+    }
     proposal.fraudFlags = screening.flags;
     proposal.fraudRiskScore = screening.fraudRiskScore;
     if (screening.flags.length) {
@@ -624,6 +645,20 @@ const finalizeAcceptedDeal = async (proposal) => {
       : [],
   });
 
+  try {
+    const { createContractForProposal } = require('../services/contract.service');
+    const { initiateForCampaign } = require('../services/escrow.service');
+    const { notify } = require('../services/notification.service');
+    const contract = await createContractForProposal(proposal, deal);
+    campaign.contractId = contract._id;
+    await campaign.save();
+    await initiateForCampaign({ campaign, proposal, deal });
+    await notify(proposal.organizerId, 'proposal_accepted', 'A sponsor accepted your proposal. Contract is ready to sign.', proposal._id);
+    await notify(proposal.sponsorId, 'contract_ready', 'Sponsorship contract generated. Review and sign.', contract._id);
+  } catch (hookError) {
+    console.error('[accept hooks]', hookError.message);
+  }
+
   return { deal, campaign };
 };
 
@@ -710,6 +745,14 @@ exports.counterOffer = async (req, res) => {
     await proposal.save();
 
     const populated = await Proposal.findById(proposal._id).populate(POPULATE);
+    require('../services/notification.service')
+      .notify(
+        actorRole === 'sponsor' ? proposal.organizerId : proposal.sponsorId,
+        'counter_offer',
+        'A new counter-offer was submitted.',
+        proposal._id
+      )
+      .catch(() => {});
 
     res.status(201).json({
       success: true,

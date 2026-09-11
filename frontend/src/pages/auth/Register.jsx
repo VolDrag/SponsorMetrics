@@ -51,16 +51,22 @@ const Register = () => {
       }
 
       const res = await authApi.register(payload);
-      const { token, user } = res.data.data;
+      const user = login(res.data.data);
+      if (!user?._id) {
+        setError(res.data.message || 'Check your email for a verification code.');
+        if (res.data.data?.requiresVerification) {
+          localStorage.setItem('pendingEmail', payload.email);
+          navigate('/verify-otp');
+        }
+        return;
+      }
 
-      // Auto-login after successful registration
-      login(token, user);
-
-      // Redirect based on role
       if (user.role === 'organizer') {
         navigate('/organizer/events');
       } else if (user.role === 'sponsor') {
-        navigate('/sponsor/discover');
+        navigate('/sponsor/discovery');
+      } else if (user.role === 'admin') {
+        navigate('/admin');
       } else {
         navigate('/');
       }

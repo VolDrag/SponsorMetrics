@@ -26,17 +26,20 @@ const Login = () => {
 
     try {
       const res = await authApi.login(formData);
-      const { token, user } = res.data.data;
+      const payload = res.data.data;
+      const user = login(payload);
+      if (!user?._id) {
+        throw new Error('Login succeeded but no user was returned');
+      }
 
-      login(token, user);
-
-      // Redirect based on role
       if (user.role === 'organizer') {
         navigate('/organizer/events');
       } else if (user.role === 'sponsor') {
-        navigate('/sponsor/discovery'); // fixed from  '/sponsor/discover' to '/sponsor/discovery' 
+        navigate('/sponsor/discovery');
+      } else if (user.role === 'admin') {
+        navigate('/admin');
       } else {
-        navigate('/admin/dashboard');
+        navigate('/');
       }
     } catch (err) {
       const message = err.response?.data?.message || 'Login failed';

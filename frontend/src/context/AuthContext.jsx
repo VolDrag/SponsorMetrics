@@ -1,60 +1,61 @@
-import React from 'react'
-import { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import authApi from '../services/authApi';
+import { setAccessToken } from '../services/api';
 
 const AuthContext = createContext(null);
+
+const applySession = (payload, setUser) => {
+  const user = payload?.user || payload;
+  if (payload?.accessToken) setAccessToken(payload.accessToken);
+  if (user && user._id) setUser(user);
+  return user;
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
- 
+
   useEffect(() => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
     checkAuth();
   }, []);
 
   const checkAuth = async () => {
-    const token = localStorage.getItem('token');
-    const savedUser = localStorage.getItem('user');
-
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
-    // Restore session from localStorage instantly — no network call needed
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-        setLoading(false);
-        return;
-      } catch {
-        // Corrupted data, fall through to network check
-      }
-    }
-
-    // Fallback: verify token via network if user data is missing
     try {
+      const refreshed = await authApi.refresh().catch(() => null);
+      if (refreshed?.data?.data?.accessToken) {
+        setAccessToken(refreshed.data.data.accessToken);
+      }
       const res = await authApi.getMe();
-      setUser(res.data.data);
-      localStorage.setItem('user', JSON.stringify(res.data.data));
-    } catch (error) {
-      console.error('Auth check failed:', error);
-      logout();
+      applySession({ user: res.data.data, accessToken: refreshed?.data?.data?.accessToken }, setUser);
+    } catch (_error) {
+      setAccessToken(null);
+      setUser(null);
     } finally {
       setLoading(false);
     }
   };
 
-  const login = (token, userData) => {
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(userData));
-    setUser(userData);
+  const login = (payload) => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    return applySession(payload, setUser);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await authApi.logout();
+    } catch (_error) {
+      /* still clear client session */
+    }
+    setAccessToken(null);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
+    if (window.location.pathname !== '/login') {
+      window.location.assign('/login');
+    }
   };
 
   const value = {
@@ -82,4 +83,4 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}; 
+};

@@ -275,3 +275,54 @@ exports.askAboutRoi = async (req, res) => {
   }
 };
 // ===== MODULE 3 FEATURE 2: Sponsorship Performance & ROI Analytics — END =====
+
+exports.getOrganizerRoi = async (req, res) => {
+  try {
+    const proposals = await Proposal.find({ organizerId: req.user._id, status: 'accepted' })
+      .populate('eventId', 'name date venue')
+      .populate('sponsorId', 'name organizationName');
+    const metrics = await PostEventMetrics.find({ proposalId: { $in: proposals.map((p) => p._id) } });
+    const byProposal = {};
+    metrics.forEach((row) => {
+      byProposal[String(row.proposalId)] = row;
+    });
+    const rows = proposals.map((proposal) => {
+      const metric = byProposal[String(proposal._id)];
+      return {
+        eventName: proposal.eventId?.name,
+        eventDate: proposal.eventId?.date,
+        sponsorName: proposal.sponsorId?.organizationName || proposal.sponsorId?.name,
+        spend: proposal.proposedBudget,
+        totalReach: metric?.totalReach,
+        totalEngagement: metric?.totalEngagement,
+        attendeeCount: metric?.attendeeCount,
+        ...exports.computeKpis({
+          sponsorshipCost: proposal.proposedBudget,
+          totalReach: metric?.totalReach,
+          totalEngagement: metric?.totalEngagement,
+        }),
+      };
+    });
+    res.json({ success: true, data: { rows } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to load organizer analytics', error: error.message });
+  }
+};
+
+exports.exportSponsorCsv = async (req, res) => {
+  try {
+    const payload = await loadSponsorRoiPayload(req.user._id);
+    const header = 'event,date,spend,reach,engagement,costPerReach,costPerEngagement,audienceGrowth';
+    const lines = (payload.events || []).map((row) =>
+      [row.eventName, row.eventDate, row.sponsorshipCost, row.totalReach, row.totalEngagement, row.costPerReach, row.costPerEngagement, row.audienceGrowth]
+        .map((value) => `"${value == null ? '' : String(value).replace(/"/g, '""')}"`)
+        .join(',')
+    );
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="roi-export.csv"');
+    res.send([header, ...lines].join('\n'));
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'CSV export failed', error: error.message });
+  }
+};
+

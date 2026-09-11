@@ -5,6 +5,7 @@ const proposalController = require('../controllers/proposal.controller');
 const { authenticate } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roleCheck');
 const { validate } = require('../middleware/validate');
+const { sendLimiter, aiLimiter } = require('../middleware/rateLimit');
 const {
   createProposalValidation,
   updateProposalValidation,
@@ -13,15 +14,27 @@ const {
   aiAssistValidation,
   counterOfferValidation, // MODULE 2 | Feature 2
 } = require('../validators/proposal.validator');
+const {
+  analyzeValidation,
+  eventIdParamValidation: analyzerEventIdValidation,
+} = require('../validators/analyzer.validator');
 
-// Module 1 — Proposal Strength Analyzer
-router.post('/analyze', analyzeProposalStrength);
+// Module 1 — Proposal Strength Analyzer (MODULE 9: auth + validation)
+router.post(
+  '/analyze',
+  authenticate,
+  requireRole('organizer'),
+  analyzeValidation,
+  validate,
+  analyzeProposalStrength
+);
 
 // ========== MODULE 2 | Feature 1: Proposal Creator — START ==========
 router.post(
   '/ai-assist',
   authenticate,
   requireRole('organizer'),
+  aiLimiter,
   aiAssistValidation,
   validate,
   proposalController.aiAssist
@@ -91,6 +104,7 @@ router.post(
   '/:proposalId/send',
   authenticate,
   requireRole('organizer'),
+  sendLimiter,
   sendProposalValidation,
   validate,
   proposalController.sendProposal
@@ -125,6 +139,6 @@ router.post(
 // ========== MODULE 2 | Feature 2: Proposal Review & In-Platform Negotiation — END ==========
 
 // Module 1 — keep analyzer lookup after specific Module 2 paths
-router.get('/:eventId/strength', getProposalStrength);
+router.get('/:eventId/strength', authenticate, analyzerEventIdValidation, validate, getProposalStrength);
 
 module.exports = router;

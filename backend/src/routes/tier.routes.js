@@ -4,6 +4,13 @@ const express = require('express');
 // 1. Destructure authenticate here
 const { authenticate } = require('../middleware/auth'); 
 const { requireRole } = require('../middleware/roleCheck');
+const { validate } = require('../middleware/validate');
+const {
+  createTierValidation,
+  updateTierValidation,
+  tierIdValidation,
+  eventIdParamValidation,
+} = require('../validators/tier.validator');
 const {
   createTier,
   getTiersByEvent,
@@ -14,12 +21,11 @@ const {
 
 const router = express.Router();
 
-// 2. Replace 'auth' with 'authenticate' in all your routes
 router.get('/events/mine', authenticate, requireRole('organizer'), getOrganizerEvents);
-router.get('/event/:eventId', authenticate, getTiersByEvent);
-router.post('/', authenticate, requireRole('organizer'), createTier);
-router.put('/:tierId', authenticate, requireRole('organizer'), updateTier);
-router.delete('/:tierId', authenticate, requireRole('organizer'), deleteTier);
+router.get('/event/:eventId', authenticate, eventIdParamValidation, validate, getTiersByEvent);
+router.post('/', authenticate, requireRole('organizer'), createTierValidation, validate, createTier);
+router.put('/:tierId', authenticate, requireRole('organizer'), updateTierValidation, validate, updateTier);
+router.delete('/:tierId', authenticate, requireRole('organizer'), tierIdValidation, validate, deleteTier);
 
 module.exports = router;
 // ifty end

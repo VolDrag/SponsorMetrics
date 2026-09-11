@@ -4,6 +4,7 @@ const marketingController = require('../controllers/marketing.controller');
 const { authenticate } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roleCheck');
 const { validate } = require('../middleware/validate');
+const { aiLimiter } = require('../middleware/rateLimit');
 const { param } = require('express-validator');
 
 // ===== MODULE 4 FEATURE 4: AI-Powered Marketing Consultation — START =====
@@ -11,6 +12,7 @@ router.post(
   '/events/:eventId',
   authenticate,
   requireRole('organizer'),
+  aiLimiter,
   param('eventId').isMongoId().withMessage('Invalid event ID'),
   validate,
   marketingController.getEventAdvice

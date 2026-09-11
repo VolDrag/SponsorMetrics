@@ -64,6 +64,7 @@ const PublicProfile = () => {
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{profile.role}</p>
               <h1 className="mt-1 text-2xl font-bold text-slate-900">
                 {profile.organizationName || profile.name}
+                {profile.orgVerified && <span className="ml-2 rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold uppercase text-green-700">Verified</span>}
               </h1>
               {profile.organizationName && (
                 <p className="text-sm text-slate-500">{profile.name}</p>

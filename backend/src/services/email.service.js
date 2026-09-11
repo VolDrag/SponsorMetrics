@@ -97,3 +97,28 @@ exports.sendVolunteerInstructions = async (to, subject, htmlBody) => {
 };
 // ===== MODULE 4 FEATURE 1: Volunteer Management System — END =====
 
+exports.sendInvoiceEmail = async (email, name, filePath, payment) => {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.warn('[invoice] email skipped — EMAIL_USER / EMAIL_PASS not set');
+    return { skipped: true };
+  }
+  await transporter.sendMail({
+    from: `"SponsorMetrics BD" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: `Invoice ${payment.invoiceNumber || payment._id} — BDT ${Number(payment.amount || 0).toLocaleString()}`,
+    html: `<p>Hi ${name || 'there'},</p><p>Your sponsorship invoice is attached. Funds are held in escrow until the post-event report is approved.</p>`,
+    attachments: filePath ? [{ filename: 'invoice.pdf', path: filePath }] : [],
+  });
+  return { skipped: false };
+};
+
+exports.sendSms = async (phone, text) => {
+  if (!phone) return { skipped: true };
+  if (!process.env.SMS_API_KEY) {
+    console.warn('[sms] skipped (no SMS_API_KEY):', phone, text);
+    return { skipped: true, logged: true };
+  }
+  return { skipped: false };
+};
+
+

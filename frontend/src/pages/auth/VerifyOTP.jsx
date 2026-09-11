@@ -34,16 +34,15 @@ const VerifyOTP = () => {
 
     try {
       const res = await authApi.verifyOTP({ email, otp });
-      const { token, user } = res.data.data;
-
-      login(token, user);
+      const user = login(res.data.data);
       localStorage.removeItem('pendingEmail');
 
-      // Redirect based on role
-      if (user.role === 'organizer') {
+      if (user?.role === 'organizer') {
         navigate('/organizer/events');
+      } else if (user?.role === 'admin') {
+        navigate('/admin');
       } else {
-        navigate('/sponsor/discover');
+        navigate('/sponsor/discovery');
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid OTP');

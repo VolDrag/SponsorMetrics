@@ -5,6 +5,8 @@ const authApi = {
   verifyOTP: (data) => api.post('/auth/verify-otp', data),
   resendOTP: (email) => api.post('/auth/resend-otp', { email }),
   login: (credentials) => api.post('/auth/login', credentials),
+  refresh: () => api.post('/auth/refresh'),
+  logout: () => api.post('/auth/logout'),
   getMe: () => api.get('/auth/me'),
 };
 

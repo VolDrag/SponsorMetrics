@@ -9,7 +9,7 @@ const {
   updateCampaignValidation,
   updateEventReportValidation, // MODULE 2 | Feature 3 Event Editing
 } = require('../validators/campaign.validator');
-const { uploadCampaignPhotos } = require('../middleware/upload'); // MODULE 2 | Feature 3 Event Editing
+const { uploadCampaignPhotos, scanUploadedImages } = require('../middleware/upload'); // MODULE 2 | Feature 3 Event Editing + MODULE 9 scan
 
 // ========== MODULE 2 | Feature 3: Sponsor Portfolio Handler — START ==========
 router.get(
@@ -44,6 +44,7 @@ router.put(
   authenticate,
   requireRole('sponsor'),
   uploadCampaignPhotos,
+  scanUploadedImages,
   updateEventReportValidation,
   validate,
   campaignController.updateEventReport
