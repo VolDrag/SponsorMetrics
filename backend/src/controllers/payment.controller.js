@@ -166,3 +166,33 @@ exports.refund = async (req, res) => {
     res.status(500).json({ success: false, message: 'Refund failed', error: error.message });
   }
 };
+
+exports.downloadInvoice = async (req, res) => {
+  try {
+    const payment = await Payment.findById(req.params.paymentId).populate(PAYMENT_POPULATE);
+    if (!payment) return res.status(404).json({ success: false, message: 'Payment not found' });
+    if (!canAccess(req, payment)) {
+      return res.status(403).json({ success: false, message: 'Not allowed' });
+    }
+    const { ensureInvoicePdf } = require('../services/invoice.service');
+    const Event = require('../models/Event');
+    const eventName =
+      payment.campaignId?.eventId?.name ||
+      (payment.campaignId?.eventId ? (await Event.findById(payment.campaignId.eventId).select('name'))?.name : '');
+    const pdf = await ensureInvoicePdf({
+      payment,
+      sponsor: payment.sponsorId,
+      organizer: payment.organizerId,
+      eventName,
+    });
+    if (!payment.invoiceUrl) {
+      payment.invoiceUrl = pdf.url;
+      await payment.save();
+    }
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="invoice-${payment._id}.pdf"`);
+    return res.sendFile(require('path').resolve(pdf.filePath));
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to download invoice', error: error.message });
+  }
+};

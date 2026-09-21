@@ -7,6 +7,13 @@ const contractController = require('../controllers/contract.controller');
 
 router.get('/', authenticate, contractController.listMine);
 router.get(
+  '/:contractId/pdf',
+  authenticate,
+  param('contractId').isMongoId(),
+  validate,
+  contractController.downloadPdf
+);
+router.get(
   '/:contractId',
   authenticate,
   param('contractId').isMongoId(),

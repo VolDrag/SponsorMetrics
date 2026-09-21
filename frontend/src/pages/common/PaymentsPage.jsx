@@ -2,8 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { useAuth } from '../../context/AuthContext';
-import { paymentApi, disputeApi, adminApi } from '../../services/platformApi';
-import { resolveUploadUrl } from '../../services/campaignApi';
+import { paymentApi, disputeApi, adminApi, openPdf } from '../../services/platformApi';
 
 const formatBdt = (value) => `BDT ${Number(value || 0).toLocaleString()}`;
 
@@ -174,15 +173,18 @@ const PaymentsPage = () => {
                       {row.mock ? 'Pay with bKash (sandbox)' : 'Pay with bKash'}
                     </button>
                   )}
-                  {row.invoiceUrl && (
-                    <a
-                      href={resolveUploadUrl(row.invoiceUrl)}
-                      target="_blank"
-                      rel="noreferrer"
+                  {(row.invoiceUrl || row.escrowStatus === 'held' || row.status === 'completed' || row.status === 'refunded') && (
+                    <button
+                      type="button"
                       className="rounded-lg border px-4 py-2 text-sm font-medium text-amber-800"
+                      onClick={() =>
+                        openPdf(() => paymentApi.invoice(row._id), `invoice-${row.invoiceNumber || row._id}.pdf`).catch((err) =>
+                          setError(err.message || 'Could not open invoice')
+                        )
+                      }
                     >
                       Invoice PDF
-                    </a>
+                    </button>
                   )}
                   {user?.role === 'admin' && row.escrowStatus === 'held' && (
                     <button type="button" disabled={busyId === row._id} onClick={() => release(row._id)} className="rounded-lg bg-green-600 px-4 py-2 text-sm text-white">

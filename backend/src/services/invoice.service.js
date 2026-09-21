@@ -38,3 +38,13 @@ exports.generateInvoicePdf = ({ payment, sponsor, organizer, eventName }) =>
     stream.on('finish', () => resolve({ filePath, url: `/uploads/invoices/${filename}` }));
     stream.on('error', reject);
   });
+
+exports.invoiceFilePath = (paymentId) => path.join(invoiceDir, `invoice-${paymentId}.pdf`);
+
+exports.ensureInvoicePdf = async ({ payment, sponsor, organizer, eventName }) => {
+  const filePath = exports.invoiceFilePath(payment._id);
+  if (fs.existsSync(filePath) && fs.statSync(filePath).size > 80) {
+    return { filePath, url: `/uploads/invoices/invoice-${payment._id}.pdf` };
+  }
+  return exports.generateInvoicePdf({ payment, sponsor, organizer, eventName });
+};

@@ -62,8 +62,9 @@ exports.scanUploadedImages = async (req, res, next) => {
 };
 
 exports.blockNonImageUploads = (req, res, next) => {
-  const ext = path.extname(req.path || '').toLowerCase();
-  const pdfOk = /\.(pdf)$/i.test(req.path) && /\/(invoices|contracts|reports-white)\//.test(req.path);
+  const requestPath = `${req.baseUrl || ''}${req.path || ''}` || req.originalUrl || '';
+  const ext = path.extname(requestPath.split('?')[0] || '').toLowerCase();
+  const pdfOk = /\.pdf$/i.test(requestPath) && /(invoices|contracts|reports-white)/i.test(requestPath);
   if (ext && !ALLOWED_EXT.includes(ext) && !pdfOk) {
     return res.status(404).json({ success: false, message: 'Not found' });
   }

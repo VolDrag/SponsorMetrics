@@ -51,3 +51,25 @@ exports.sign = async (req, res) => {
     res.status(error.statusCode || 500).json({ success: false, message: error.message });
   }
 };
+
+exports.downloadPdf = async (req, res) => {
+  try {
+    const contract = await Contract.findById(req.params.contractId);
+    if (!contract) return res.status(404).json({ success: false, message: 'Contract not found' });
+    const uid = String(req.user._id);
+    if (
+      req.user.role !== 'admin' &&
+      String(contract.organizerId) !== uid &&
+      String(contract.sponsorId) !== uid
+    ) {
+      return res.status(403).json({ success: false, message: 'Not a party to this contract' });
+    }
+    const { ensureContractPdf } = require('../services/contract.service');
+    const filePath = await ensureContractPdf(contract);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="contract-${contract._id}.pdf"`);
+    return res.sendFile(require('path').resolve(filePath));
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to download contract PDF', error: error.message });
+  }
+};

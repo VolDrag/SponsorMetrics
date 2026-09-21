@@ -19,6 +19,13 @@ router.post(
   paymentController.checkout
 );
 router.get(
+  '/:paymentId/invoice',
+  authenticate,
+  param('paymentId').isMongoId(),
+  validate,
+  paymentController.downloadInvoice
+);
+router.get(
   '/:paymentId',
   authenticate,
   param('paymentId').isMongoId(),

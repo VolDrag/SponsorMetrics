@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout';
-import { contractApi } from '../../services/platformApi';
-import { resolveUploadUrl } from '../../services/campaignApi';
+import { contractApi, openPdf } from '../../services/platformApi';
 
 const ContractsPage = () => {
   const [rows, setRows] = useState([]);
@@ -36,7 +35,17 @@ const ContractsPage = () => {
             </p>
             <p className="text-sm text-slate-500">Organizer signed: {row.signedByOrganizer ? 'yes' : 'no'} · Sponsor signed: {row.signedBySponsor ? 'yes' : 'no'}</p>
             <div className="mt-3 flex flex-wrap gap-3">
-              {row.pdfUrl && <a href={resolveUploadUrl(row.pdfUrl)} target="_blank" rel="noreferrer" className="text-sm text-amber-700">Download PDF</a>}
+              <button
+                type="button"
+                onClick={() =>
+                  openPdf(() => contractApi.pdf(row._id), `contract-${row._id}.pdf`).catch((err) =>
+                    setError(err.message || 'Could not open contract PDF')
+                  )
+                }
+                className="text-sm font-medium text-amber-700"
+              >
+                Download PDF
+              </button>
               {row.status !== 'executed' && (
                 <button type="button" onClick={() => sign(row._id)} className="rounded bg-slate-900 px-3 py-1.5 text-sm text-white">Sign</button>
               )}
