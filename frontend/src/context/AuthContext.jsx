@@ -53,7 +53,10 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
-    if (window.location.pathname !== '/login') {
+    const publicPaths = ['/', '/login', '/register', '/verify-otp'];
+    const isPublic = publicPaths.includes(window.location.pathname) ||
+      window.location.pathname.startsWith('/volunteer-signup');
+    if (!isPublic) {
       window.location.assign('/login');
     }
   };
