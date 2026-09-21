@@ -27,6 +27,7 @@ const paymentSchema = new mongoose.Schema(
     trxID: { type: String, trim: true },
     invoiceNumber: { type: String, trim: true },
     invoiceUrl: { type: String, trim: true },
+    checkoutUrl: { type: String, trim: true },
     mock: { type: Boolean, default: false },
     heldAt: { type: Date },
     executedAt: { type: Date },

@@ -49,6 +49,11 @@ const PortfolioCard = ({ campaign, onStatusChange, updating, onEditReport, onVie
           {campaign.status}
         </span>
         <span className="text-sm font-semibold text-slate-900">{formatBdt(campaign.spend)} spend</span>
+        {campaign.escrowStatus && campaign.escrowStatus !== 'none' && (
+          <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium capitalize text-blue-800">
+            escrow {campaign.escrowStatus}
+          </span>
+        )}
       </div>
 
       {/* ========== MODULE 2 | Feature 3 Event Editing — START ========== */}

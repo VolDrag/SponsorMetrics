@@ -2,6 +2,10 @@ import api from './api';
 
 export const paymentApi = {
   list: () => api.get('/payments'),
+  get: (id) => api.get(`/payments/${id}`),
+  checkout: (id) => api.post(`/payments/${id}/checkout`),
+  confirmCallback: (paymentID, status) => api.post('/payments/callback', { paymentID, status }),
+  refund: (id, reason) => api.post(`/payments/${id}/refund`, { reason }),
 };
 
 export const contractApi = {
@@ -28,6 +32,8 @@ export const adminApi = {
 export const disputeApi = {
   list: () => api.get('/disputes'),
   create: (payload) => api.post('/disputes', payload),
+  comment: (id, message) => api.post(`/disputes/${id}/comment`, { message }),
+  resolve: (id, action, notes) => api.post(`/disputes/${id}/resolve`, { action, notes }),
 };
 
 export const teamApi = {

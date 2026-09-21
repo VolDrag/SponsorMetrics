@@ -10,6 +10,14 @@ router.get('/', authenticate, paymentController.listMine);
 router.get('/callback', paymentController.callback);
 router.post('/callback', paymentController.callback);
 router.post('/webhook', paymentController.webhook);
+router.post(
+  '/:paymentId/checkout',
+  authenticate,
+  requireRole('sponsor', 'admin'),
+  param('paymentId').isMongoId(),
+  validate,
+  paymentController.checkout
+);
 router.get(
   '/:paymentId',
   authenticate,

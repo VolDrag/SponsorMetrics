@@ -56,7 +56,8 @@ exports.createPayment = async ({ amount, invoice, callbackURL }) => {
     {
       mode: '0011',
       payerReference: invoice,
-      callbackURL: callbackURL || `${process.env.FRONTEND_URL}/sponsor/payments/callback`,
+      callbackURL:
+        callbackURL || `${String(process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '')}/payments/callback`,
       amount: String(Number(amount).toFixed(2)),
       currency: 'BDT',
       intent: 'sale',

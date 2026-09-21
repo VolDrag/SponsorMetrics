@@ -49,6 +49,9 @@ import AdminDashboard from '../pages/admin/AdminDashboard';
 import ContractsPage from '../pages/common/ContractsPage';
 import WorkspaceSettings from '../pages/common/WorkspaceSettings';
 import OrganizerAnalytics from '../pages/organizer/OrganizerAnalytics';
+import PaymentsPage from '../pages/common/PaymentsPage';
+import PaymentCallback from '../pages/common/PaymentCallback';
+import DisputesPage from '../pages/common/DisputesPage';
 
 const AppRoutes = () => {
   return (
@@ -307,6 +310,38 @@ const AppRoutes = () => {
             element={
               <ProtectedRoute allowedRoles={['organizer', 'sponsor', 'admin']}>
                 <ContractsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payments"
+            element={
+              <ProtectedRoute allowedRoles={['organizer', 'sponsor', 'admin']}>
+                <PaymentsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payments/callback"
+            element={
+              <ProtectedRoute allowedRoles={['organizer', 'sponsor', 'admin']}>
+                <PaymentCallback />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/sponsor/payments/callback"
+            element={
+              <ProtectedRoute allowedRoles={['organizer', 'sponsor', 'admin']}>
+                <PaymentCallback />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/disputes"
+            element={
+              <ProtectedRoute allowedRoles={['organizer', 'sponsor', 'admin']}>
+                <DisputesPage />
               </ProtectedRoute>
             }
           />

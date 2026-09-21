@@ -119,6 +119,16 @@ const ProposalReview = ({ backTo, backLabel }) => {
           <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
         )}
 
+        {proposal.status === 'accepted' && (
+          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            Deal accepted. Next: {user?.role === 'sponsor' ? 'fund escrow, then ' : ''}sign the contract.
+            <div className="mt-2 flex gap-3">
+              <Link to="/payments" className="font-semibold underline">Payments</Link>
+              <Link to="/contracts" className="font-semibold underline">Contracts</Link>
+            </div>
+          </div>
+        )}
+
         <div className="mb-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-lg font-bold text-gray-800">Proposal details</h2>
           <div className="grid gap-4 text-sm md:grid-cols-2">

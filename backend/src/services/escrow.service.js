@@ -7,53 +7,49 @@ const { generateInvoicePdf } = require('./invoice.service');
 const { notify } = require('./notification.service');
 const { sendInvoiceEmail } = require('./email.service');
 
+const frontendOrigin = () => String(process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+const callbackUrl = () => `${frontendOrigin()}/payments/callback`;
+
 exports.initiateForCampaign = async ({ campaign, proposal, deal }) => {
   const amount = Number(proposal.proposedBudget || campaign.spend || 0);
   const invoice = `SM-${String(campaign._id).slice(-8).toUpperCase()}`;
-  const created = await bkash.createPayment({ amount, invoice });
+  const created = await bkash.createPayment({ amount, invoice, callbackURL: callbackUrl() });
+
+  const checkoutUrl = created.mock
+    ? `${callbackUrl()}?paymentID=${created.paymentID}&status=success`
+    : created.bkashURL || '';
 
   const payment = await Payment.create({
     dealId: deal._id,
     campaignId: campaign._id,
     proposalId: proposal._id,
+    contractId: campaign.contractId,
     sponsorId: proposal.sponsorId,
     organizerId: proposal.organizerId,
     amount,
     currency: 'BDT',
-    status: created.mock ? 'executed' : 'initiated',
-    escrowStatus: created.mock ? 'held' : 'none',
+    status: 'initiated',
+    escrowStatus: 'none',
     bkashPaymentID: created.paymentID,
     paymentGatewayRef: created.paymentID,
     invoiceNumber: invoice,
-    heldAt: created.mock ? new Date() : null,
+    checkoutUrl,
     mock: Boolean(created.mock),
   });
 
-  if (created.mock) {
-    const executed = await bkash.executePayment(created.paymentID);
-    payment.trxID = executed.trxID;
-    payment.status = 'completed';
-    payment.escrowStatus = 'held';
-    payment.executedAt = new Date();
-    await payment.save();
-    await attachInvoice(payment, proposal);
-  }
-
   campaign.paymentId = payment._id;
   campaign.bkashPaymentID = created.paymentID;
-  campaign.escrowStatus = payment.escrowStatus === 'held' ? 'held' : 'pending';
+  campaign.escrowStatus = 'pending';
   await campaign.save();
 
   await notify(
     proposal.sponsorId,
     'payment_confirmation',
-    created.mock
-      ? `Sandbox escrow of BDT ${amount.toLocaleString()} is held for this sponsorship.`
-      : `Complete bKash payment of BDT ${amount.toLocaleString()} to fund escrow.`,
+    `Pay BDT ${amount.toLocaleString()} on the Payments page to fund escrow for this sponsorship.`,
     payment._id
   );
 
-  return { payment, bkashURL: created.bkashURL, mock: created.mock };
+  return { payment, bkashURL: checkoutUrl, mock: created.mock };
 };
 
 const attachInvoice = async (payment, proposal) => {
@@ -80,6 +76,12 @@ const attachInvoice = async (payment, proposal) => {
 exports.executeAndHold = async (paymentID) => {
   const payment = await Payment.findOne({ bkashPaymentID: paymentID });
   if (!payment) return null;
+  if (payment.escrowStatus === 'held' || payment.escrowStatus === 'released') {
+    return payment;
+  }
+  if (payment.status === 'refunded' || payment.escrowStatus === 'refunded') {
+    return payment;
+  }
   const executed = await bkash.executePayment(paymentID);
   const query = await bkash.queryPayment(paymentID);
   const ok = /complete/i.test(String(executed.transactionStatus || query.transactionStatus || 'Completed'));
@@ -102,6 +104,34 @@ exports.executeAndHold = async (paymentID) => {
   return payment;
 };
 
+exports.checkout = async (payment, { recreate = false } = {}) => {
+  if (payment.escrowStatus === 'held' || payment.escrowStatus === 'released') {
+    return { payment, alreadyFunded: true };
+  }
+  if (payment.mock || bkash.isMock() || String(payment.bkashPaymentID || '').startsWith('mock_')) {
+    const funded = await exports.executeAndHold(payment.bkashPaymentID);
+    return { payment: funded, alreadyFunded: false };
+  }
+  if (payment.checkoutUrl && !recreate) {
+    return { payment, bkashURL: payment.checkoutUrl };
+  }
+  const created = await bkash.createPayment({
+    amount: payment.amount,
+    invoice: payment.invoiceNumber,
+    callbackURL: callbackUrl(),
+  });
+  payment.bkashPaymentID = created.paymentID;
+  payment.paymentGatewayRef = created.paymentID;
+  payment.checkoutUrl = created.bkashURL || '';
+  payment.status = 'initiated';
+  await payment.save();
+  await Campaign.updateOne(
+    { _id: payment.campaignId },
+    { bkashPaymentID: created.paymentID, escrowStatus: 'pending' }
+  );
+  return { payment, bkashURL: payment.checkoutUrl };
+};
+
 exports.releaseOnReportApproval = async (proposalId) => {
   const payment = await Payment.findOne({ proposalId, escrowStatus: 'held' });
   if (!payment) return null;
@@ -117,6 +147,7 @@ exports.releaseOnReportApproval = async (proposalId) => {
 exports.refundPayment = async (paymentId, { amount, reason, actorId }) => {
   const payment = await Payment.findById(paymentId);
   if (!payment) return null;
+  if (payment.status === 'refunded' || payment.escrowStatus === 'refunded') return payment;
   const refundAmount = amount != null ? Number(amount) : payment.amount;
   const result = await bkash.refundPayment({
     paymentID: payment.bkashPaymentID,

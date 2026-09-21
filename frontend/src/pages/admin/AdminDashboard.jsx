@@ -1,17 +1,27 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout';
-import { adminApi } from '../../services/platformApi';
+import { adminApi, paymentApi, disputeApi } from '../../services/platformApi';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
   const [kyc, setKyc] = useState([]);
+  const [payments, setPayments] = useState([]);
+  const [disputes, setDisputes] = useState([]);
   const [error, setError] = useState('');
 
   const load = async () => {
     try {
-      const [dash, queue] = await Promise.all([adminApi.dashboard(), adminApi.kyc('pending')]);
+      const [dash, queue, pay, disp] = await Promise.all([
+        adminApi.dashboard(),
+        adminApi.kyc('pending'),
+        paymentApi.list(),
+        disputeApi.list(),
+      ]);
       setStats(dash.data.data);
       setKyc(queue.data.data || []);
+      setPayments((pay.data.data || []).filter((row) => row.escrowStatus === 'held' || row.status === 'initiated'));
+      setDisputes((disp.data.data || []).filter((row) => row.status === 'open'));
     } catch (err) {
       setError(err.response?.data?.message || 'Admin load failed');
     }
@@ -52,6 +62,30 @@ const AdminDashboard = () => {
           </article>
         ))}
         {!kyc.length && <p className="text-sm text-slate-500">No pending verifications.</p>}
+      </div>
+
+      <h2 className="mt-10 text-lg font-semibold">Escrow needing attention</h2>
+      <p className="text-sm text-slate-500"><Link to="/payments" className="text-amber-700">Open the payments desk</Link> to release or refund.</p>
+      <div className="mt-3 space-y-2">
+        {payments.slice(0, 8).map((row) => (
+          <article key={row._id} className="flex items-center justify-between rounded-xl border bg-white p-4 text-sm">
+            <span>{row.campaignId?.eventId?.name || row.invoiceNumber} · BDT {Number(row.amount || 0).toLocaleString()}</span>
+            <span className="capitalize text-slate-500">{row.escrowStatus} / {row.status}</span>
+          </article>
+        ))}
+        {!payments.length && <p className="text-sm text-slate-500">No held or pending payments.</p>}
+      </div>
+
+      <h2 className="mt-10 text-lg font-semibold">Open disputes</h2>
+      <p className="text-sm text-slate-500"><Link to="/disputes" className="text-amber-700">Resolve on the disputes page</Link></p>
+      <div className="mt-3 space-y-2">
+        {disputes.slice(0, 8).map((row) => (
+          <article key={row._id} className="rounded-xl border bg-white p-4 text-sm">
+            <p className="font-medium">{row.campaignId?.eventId?.name || 'Dispute'}</p>
+            <p className="text-slate-500">{row.reason}</p>
+          </article>
+        ))}
+        {!disputes.length && <p className="text-sm text-slate-500">No open disputes.</p>}
       </div>
     </DashboardLayout>
   );

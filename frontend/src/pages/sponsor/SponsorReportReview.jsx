@@ -145,7 +145,8 @@ const SponsorReportReview = () => {
 
             {locked ? (
               <p className="text-sm text-green-700">
-                Signed off {report.signOff?.approvedAt ? new Date(report.signOff.approvedAt).toLocaleString() : ''}
+                Signed off {report.signOff?.approvedAt ? new Date(report.signOff.approvedAt).toLocaleString() : ''}.
+                Escrow is released to the organizer — check the <Link to="/payments" className="font-semibold underline">Payments</Link> page.
               </p>
             ) : (
               <div className="space-y-3">

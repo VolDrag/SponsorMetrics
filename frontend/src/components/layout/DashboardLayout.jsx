@@ -13,6 +13,8 @@ import {
   Bell,
   Shield,
   Users,
+  Wallet,
+  Scale,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import RateDealBanner from '../common/RateDealBanner';
@@ -32,7 +34,9 @@ const Sidebar = () => {
     { name: 'Analytics', icon: BarChart2, path: '/sponsor/analytics' },
     { name: 'Experiments', icon: LayoutGrid, path: '/sponsor/experiments' },
     { name: 'Reports', icon: FileText, path: '/sponsor/reports' },
+    { name: 'Payments', icon: Wallet, path: '/payments' },
     { name: 'Contracts', icon: FileText, path: '/contracts' },
+    { name: 'Disputes', icon: Scale, path: '/disputes' },
     { name: 'Workspace', icon: Users, path: '/workspace' },
     { name: 'Settings', icon: Settings, path: '/sponsor/settings' },
   ];
@@ -43,12 +47,16 @@ const Sidebar = () => {
     { name: 'Status Tracker', icon: LayoutGrid, path: '/organizer/proposal-tracker' },
     { name: 'Proposal Analyzer', icon: Sparkles, path: '/organizer/proposal-analyzer' },
     { name: 'Analytics', icon: BarChart2, path: '/organizer/analytics' },
+    { name: 'Payments', icon: Wallet, path: '/payments' },
     { name: 'Contracts', icon: FileText, path: '/contracts' },
+    { name: 'Disputes', icon: Scale, path: '/disputes' },
     { name: 'Workspace', icon: Users, path: '/workspace' },
   ];
 
   const adminNavItems = [
     { name: 'Admin', icon: Shield, path: '/admin' },
+    { name: 'Payments', icon: Wallet, path: '/payments' },
+    { name: 'Disputes', icon: Scale, path: '/disputes' },
     { name: 'Contracts', icon: FileText, path: '/contracts' },
   ];
 

@@ -7,7 +7,11 @@ exports.listMine = async (req, res) => {
       req.user.role === 'admin'
         ? {}
         : { $or: [{ organizerId: req.user._id }, { sponsorId: req.user._id }] };
-    const rows = await Contract.find(filter).sort({ createdAt: -1 });
+    const rows = await Contract.find(filter)
+      .populate('organizerId', 'name organizationName')
+      .populate('sponsorId', 'name organizationName')
+      .populate('proposalId', 'proposedBudget status')
+      .sort({ createdAt: -1 });
     res.json({ success: true, data: rows });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to list contracts', error: error.message });
