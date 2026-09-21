@@ -1,14 +1,14 @@
 import api from './api';
+import { uploadsOrigin } from './apiConfig';
 
-// MODULE 2 | Feature 3: Sponsor Portfolio Handler
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
-export const SERVER_ORIGIN = API_BASE.replace(/\/api\/?$/, '');
+export const SERVER_ORIGIN = uploadsOrigin();
 
 // MODULE 2 | Feature 3 Event Editing — turn stored /uploads paths into full URLs
 export const resolveUploadUrl = (photoPath) => {
   if (!photoPath) return '';
   if (/^https?:\/\//i.test(photoPath)) return photoPath;
-  return `${SERVER_ORIGIN}${photoPath.startsWith('/') ? '' : '/'}${photoPath}`;
+  const origin = uploadsOrigin();
+  return `${origin}${photoPath.startsWith('/') ? '' : '/'}${photoPath}`;
 };
 
 const campaignApi = {

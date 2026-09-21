@@ -18,26 +18,33 @@ export const contractApi = {
 
 export const openPdf = async (request, filename = 'document.pdf') => {
   const res = await request();
-  const blob = res.data instanceof Blob ? res.data : new Blob([res.data], { type: 'application/pdf' });
-  if (blob.type && blob.type.includes('application/json')) {
-    const text = await blob.text();
+  const headerType = String(res.headers?.['content-type'] || '');
+  const blob = res.data instanceof Blob ? res.data : new Blob([res.data], { type: headerType || 'application/pdf' });
+  const peek = await blob.slice(0, 80).text();
+  const looksHtml = headerType.includes('text/html') || blob.type.includes('text/html') || /<!doctype html|<html/i.test(peek);
+  const looksJson = headerType.includes('application/json') || blob.type.includes('application/json') || peek.trim().startsWith('{');
+  if (looksHtml) {
+    throw new Error('The PDF request hit the Vercel website instead of the API. Set VITE_API_URL to https://sponsormetrics.onrender.com/api and redeploy.');
+  }
+  if (looksJson) {
     let message = 'Could not open PDF';
     try {
-      message = JSON.parse(text).message || message;
+      message = JSON.parse(await blob.text()).message || message;
     } catch (_e) {
       /* keep default */
     }
     throw new Error(message);
   }
-  const file = blob.type === 'application/pdf' ? blob : new Blob([blob], { type: 'application/pdf' });
+  const file = new Blob([blob], { type: 'application/pdf' });
   const url = URL.createObjectURL(file);
-  const opened = window.open(url, '_blank', 'noopener,noreferrer');
-  if (!opened) {
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.click();
-  }
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.rel = 'noopener';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
 };
 
 export const notificationApi = {
